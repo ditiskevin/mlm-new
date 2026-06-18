@@ -1,21 +1,7 @@
 # syntax=docker/dockerfile:1
 
 # ---------------------------------------------------------------------------
-# Stage 1 — Build front-end assets (Vite / Vue / Inertia)
-# ---------------------------------------------------------------------------
-FROM node:22-alpine AS assets
-WORKDIR /app
-
-COPY package.json package-lock.json ./
-RUN npm ci
-
-# Vite needs the source + config to produce public/build
-COPY vite.config.js postcss.config.js tailwind.config.js jsconfig.json ./
-COPY resources ./resources
-RUN npm run build
-
-# ---------------------------------------------------------------------------
-# Stage 2 — Install PHP dependencies (production only)
+# Stage 1 — Install PHP dependencies (production only)
 # ---------------------------------------------------------------------------
 FROM composer:2 AS vendor
 WORKDIR /app
@@ -32,6 +18,25 @@ RUN composer install \
 # Bring in the source so the optimized autoloader can map the app classes
 COPY . .
 RUN composer dump-autoload --no-dev --optimize --no-scripts
+
+# ---------------------------------------------------------------------------
+# Stage 2 — Build front-end assets (Vite / Vue / Inertia)
+# ---------------------------------------------------------------------------
+FROM node:22-alpine AS assets
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm ci
+
+# Vite needs the source + config to produce public/build
+COPY vite.config.js postcss.config.js tailwind.config.js jsconfig.json ./
+COPY resources ./resources
+
+# app.js imports Ziggy from the Composer package (../../vendor/tightenco/ziggy),
+# so make that package available to the Vite build from the vendor stage.
+COPY --from=vendor /app/vendor/tightenco/ziggy ./vendor/tightenco/ziggy
+
+RUN npm run build
 
 # ---------------------------------------------------------------------------
 # Stage 3 — Runtime (nginx + php-fpm + supervisor)
