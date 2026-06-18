@@ -47,6 +47,8 @@ FROM php:8.3-fpm-alpine AS runtime
 COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
 RUN install-php-extensions \
         pdo_mysql \
+        pdo_pgsql \
+        pgsql \
         pdo_sqlite \
         mbstring \
         bcmath \
