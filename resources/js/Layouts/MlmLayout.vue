@@ -107,56 +107,15 @@ const navStyle = (active) =>
                 style="
                     max-width: 1180px;
                     margin: 0 auto;
-                    padding: 14px 24px;
+                    padding: 10px 24px;
                     display: flex;
+                    flex-direction: column;
                     align-items: center;
-                    justify-content: space-between;
-                    gap: 24px;
+                    gap: 6px;
                 "
             >
-                <Link :href="route('home')" style="display: flex; align-items: center; gap: 11px; text-decoration: none">
-                    <span
-                        style="
-                            width: 42px;
-                            height: 42px;
-                            border-radius: 50%;
-                            background: linear-gradient(135deg, #f9c8d0, #f7b9c4);
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-                            box-shadow: 0 6px 16px rgba(242, 139, 130, 0.28);
-                        "
-                    >
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                            <path
-                                d="M12 20s-7-4.6-9.3-9.1C1 7.6 2.7 4.5 6 4.5c2 0 3.2 1.1 4 2.3.8-1.2 2-2.3 4-2.3 3.3 0 5 3.1 3.3 6.4C19 15.4 12 20 12 20Z"
-                                fill="#fff"
-                            />
-                        </svg>
-                    </span>
-                    <span style="text-align: left; line-height: 1">
-                        <span
-                            style="
-                                display: block;
-                                font-family: 'Poppins', sans-serif;
-                                font-weight: 700;
-                                font-size: 18px;
-                                color: #4a3b3d;
-                                letter-spacing: -0.2px;
-                            "
-                            >MommyLovesMe<span style="color: #f28b82">.nl</span></span
-                        >
-                        <span
-                            style="
-                                display: block;
-                                font-family: 'Dancing Script', cursive;
-                                font-size: 14px;
-                                color: #c99ba2;
-                                margin-top: 1px;
-                            "
-                            >Elk kind is uniek, elke ouder ook</span
-                        >
-                    </span>
+                <Link :href="route('home')" style="display: flex; align-items: center; text-decoration: none">
+                    <img src="/images/logo.png" alt="MommyLovesMe.nl" style="height: 150px; width: auto; display: block" />
                 </Link>
 
                 <div style="display: flex; align-items: center; gap: 4px">
@@ -301,25 +260,6 @@ const navStyle = (active) =>
                         max-width: 620px;
                     "
                 >
-                    <span
-                        style="
-                            width: 46px;
-                            height: 46px;
-                            border-radius: 50%;
-                            background: linear-gradient(135deg, #f9c8d0, #f7b9c4);
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-                            box-shadow: 0 8px 20px rgba(242, 139, 130, 0.3);
-                        "
-                    >
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                            <path
-                                d="M12 20s-7-4.6-9.3-9.1C1 7.6 2.7 4.5 6 4.5c2 0 3.2 1.1 4 2.3.8-1.2 2-2.3 4-2.3 3.3 0 5 3.1 3.3 6.4C19 15.4 12 20 12 20Z"
-                                fill="#fff"
-                            />
-                        </svg>
-                    </span>
                     <p
                         style="
                             font-family: 'Dancing Script', cursive;
@@ -348,38 +288,9 @@ const navStyle = (active) =>
                     gap: 36px;
                 "
             >
-                <div>
-                    <Link :href="route('home')" style="display: flex; align-items: center; gap: 10px; text-decoration: none">
-                        <span
-                            style="
-                                width: 38px;
-                                height: 38px;
-                                border-radius: 50%;
-                                background: linear-gradient(135deg, #f9c8d0, #f7b9c4);
-                                display: flex;
-                                align-items: center;
-                                justify-content: center;
-                                box-shadow: 0 6px 16px rgba(242, 139, 130, 0.28);
-                                flex-shrink: 0;
-                            "
-                        >
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                                <path
-                                    d="M12 20s-7-4.6-9.3-9.1C1 7.6 2.7 4.5 6 4.5c2 0 3.2 1.1 4 2.3.8-1.2 2-2.3 4-2.3 3.3 0 5 3.1 3.3 6.4C19 15.4 12 20 12 20Z"
-                                    fill="#fff"
-                                />
-                            </svg>
-                        </span>
-                        <span
-                            style="
-                                font-family: 'Poppins', sans-serif;
-                                font-weight: 700;
-                                font-size: 17px;
-                                color: #4a3b3d;
-                                letter-spacing: -0.2px;
-                            "
-                            >MommyLovesMe<span style="color: #f28b82">.nl</span></span
-                        >
+                <div style="display: flex; flex-direction: column; align-items: center; text-align: center">
+                    <Link :href="route('home')" style="display: flex; align-items: center; text-decoration: none">
+                        <img src="/images/logo.png" alt="MommyLovesMe.nl" style="height: 150px; width: auto; display: block" />
                     </Link>
                     <p style="font-family: 'Dancing Script', cursive; font-size: 19px; color: #c99ba2; margin: 14px 0 0; line-height: 1.5; max-width: 280px">
                         Een plek om te leren, te delen en te voelen dat je er niet alleen voor staat.

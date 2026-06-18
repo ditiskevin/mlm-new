@@ -24,14 +24,8 @@ import { Link } from '@inertiajs/vue3';
             <span style="position: absolute; top: -40px; right: -30px; width: 220px; height: 220px; border-radius: 50%; background: #fbd3dc; opacity: 0.5; filter: blur(4px); z-index: 2"></span>
             <span style="position: absolute; bottom: 40px; right: 80px; width: 120px; height: 120px; border-radius: 50%; background: #cde8d6; opacity: 0.4; z-index: 2"></span>
 
-            <Link href="/" style="display: inline-flex; align-items: center; gap: 12px; text-decoration: none; position: relative; z-index: 3">
-                <span style="width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #f9c8d0, #f7b9c4); display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 16px rgba(242, 139, 130, 0.28)">
-                    <svg width="25" height="25" viewBox="0 0 24 24" fill="none"><path d="M12 20s-7-4.6-9.3-9.1C1 7.6 2.7 4.5 6 4.5c2 0 3.2 1.1 4 2.3.8-1.2 2-2.3 4-2.3 3.3 0 5 3.1 3.3 6.4C19 15.4 12 20 12 20Z" fill="#fff" /></svg>
-                </span>
-                <span style="line-height: 1">
-                    <span style="display: block; font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 20px; color: #4a3b3d; letter-spacing: -0.2px">MommyLovesMe<span style="color: #f28b82">.nl</span></span>
-                    <span style="display: block; font-family: 'Dancing Script', cursive; font-size: 15px; color: #c99ba2; margin-top: 1px">Elk kind is uniek, elke ouder ook</span>
-                </span>
+            <Link href="/" style="display: inline-flex; align-items: center; text-decoration: none; position: relative; z-index: 3">
+                <img src="/images/logo.png" alt="MommyLovesMe.nl" style="height: 74px; width: auto; display: block" />
             </Link>
 
             <div style="position: relative; max-width: 420px; z-index: 3">
@@ -50,11 +44,8 @@ import { Link } from '@inertiajs/vue3';
         <!-- Form panel -->
         <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 24px">
             <div style="width: 100%; max-width: 420px">
-                <Link href="/" class="mlm-guest-mobilelogo" style="display: none; align-items: center; gap: 10px; justify-content: center; text-decoration: none; margin-bottom: 22px">
-                    <span style="width: 42px; height: 42px; border-radius: 50%; background: linear-gradient(135deg, #f9c8d0, #f7b9c4); display: flex; align-items: center; justify-content: center">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 20s-7-4.6-9.3-9.1C1 7.6 2.7 4.5 6 4.5c2 0 3.2 1.1 4 2.3.8-1.2 2-2.3 4-2.3 3.3 0 5 3.1 3.3 6.4C19 15.4 12 20 12 20Z" fill="#fff" /></svg>
-                    </span>
-                    <span style="font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 18px; color: #4a3b3d">MommyLovesMe<span style="color: #f28b82">.nl</span></span>
+                <Link href="/" class="mlm-guest-mobilelogo" style="display: none; align-items: center; justify-content: center; text-decoration: none; margin-bottom: 22px">
+                    <img src="/images/logo.png" alt="MommyLovesMe.nl" style="height: 64px; width: auto; display: block" />
                 </Link>
 
                 <div style="background: #fff; border: 1px solid #f1e7e2; border-radius: 26px; padding: 34px 32px; box-shadow: 0 24px 50px rgba(214, 150, 160, 0.18)">
