@@ -1,0 +1,64 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* MommyLovesMe brand base styles */
+* {
+    box-sizing: border-box;
+}
+html,
+body {
+    margin: 0;
+    padding: 0;
+}
+body {
+    background: #faf8f5;
+    font-family: 'Quicksand', sans-serif;
+    color: #444444;
+    -webkit-font-smoothing: antialiased;
+}
+::selection {
+    background: #f9c8d0;
+    color: #5b3a3f;
+}
+
+@keyframes floaty {
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+@keyframes pop {
+    0% {
+        transform: scale(0.6);
+        opacity: 0;
+    }
+    60% {
+        transform: scale(1.08);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+@keyframes fadeUp {
+    0% {
+        opacity: 0;
+        transform: translateY(14px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.mlm-scroll::-webkit-scrollbar {
+    height: 8px;
+}
+.mlm-scroll::-webkit-scrollbar-thumb {
+    background: #f1d7dd;
+    border-radius: 8px;
+}

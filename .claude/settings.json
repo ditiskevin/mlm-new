@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(*)",
+      "PowerShell(git config --global user.name)",
+      "PowerShell(git config --global user.email)",
+      "PowerShell(ssh -o StrictHostKeyChecking=accept-new -T git@github.com 2>&1)",
+      "PowerShell(cd e:\\\\Projecten\\\\MLM-new; git init -b main 2>&1; git add -A 2>&1; Write-Output \"---STAGED COUNT---\"; \\(git diff --cached --name-only | Measure-Object -Line\\).Lines; Write-Output \"---SANITY: any node_modules/vendor/.env staged?---\"; git diff --cached --name-only | Select-String -Pattern \"node_modules|/vendor/|^\\\\.env$\" | Select-Object -First 5)"
+    ]
+  },
+  "dangerouslySkipPermissions": true
+}

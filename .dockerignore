@@ -1,0 +1,48 @@
+# Version control
+.git
+.gitignore
+.gitattributes
+
+# Dependencies (rebuilt inside the image)
+/node_modules
+/vendor
+
+# Build artifacts (rebuilt inside the image)
+/public/build
+/public/hot
+/public/storage
+
+# Local environment & secrets
+.env
+.env.*
+!.env.example
+auth.json
+
+# Local databases
+/database/*.sqlite
+/database/*.sqlite-*
+
+# Logs & caches
+/storage/logs/*.log
+/storage/pail
+/storage/*.key
+/storage/framework/cache/data/*
+/storage/framework/sessions/*
+/storage/framework/views/*
+.phpunit.result.cache
+/.phpunit.cache
+
+# Tests & dev tooling
+/tests
+/.vscode
+/.idea
+/.zed
+/.nova
+/.cursor
+_ide_helper.php
+Homestead.*
+
+# Docs / OS
+*.md
+.DS_Store
+Thumbs.db

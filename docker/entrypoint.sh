@@ -1,0 +1,56 @@
+#!/bin/sh
+set -e
+
+cd /var/www/html
+
+echo "[entrypoint] Booting MommyLovesMe..."
+
+# ---------------------------------------------------------------------------
+# Ensure writable runtime directories exist (covers fresh persistent volumes)
+# ---------------------------------------------------------------------------
+mkdir -p \
+    storage/app/public \
+    storage/framework/cache/data \
+    storage/framework/sessions \
+    storage/framework/views \
+    storage/logs \
+    bootstrap/cache
+chown -R www-data:www-data storage bootstrap/cache
+
+# ---------------------------------------------------------------------------
+# APP_KEY guard — required for encryption/sessions
+# ---------------------------------------------------------------------------
+if [ -z "${APP_KEY}" ]; then
+    echo "[entrypoint] WARNING: APP_KEY is empty. Generating a temporary key."
+    echo "[entrypoint] Set a permanent APP_KEY in Coolify (php artisan key:generate --show)"
+    echo "[entrypoint] or sessions/encrypted data will break on every redeploy."
+    export APP_KEY="$(php artisan key:generate --show --no-interaction)"
+fi
+
+# ---------------------------------------------------------------------------
+# Storage symlink (public/storage -> storage/app/public)
+# ---------------------------------------------------------------------------
+php artisan storage:link --no-interaction 2>/dev/null || true
+
+# ---------------------------------------------------------------------------
+# Database migrations (skip gracefully if no DB is configured yet)
+# ---------------------------------------------------------------------------
+if [ "${RUN_MIGRATIONS:-true}" = "true" ]; then
+    echo "[entrypoint] Running migrations..."
+    php artisan migrate --force --no-interaction || \
+        echo "[entrypoint] WARNING: migrations failed (is the database reachable?)"
+fi
+
+# ---------------------------------------------------------------------------
+# Optimize: rebuild config/route/view/event caches for production
+# ---------------------------------------------------------------------------
+php artisan optimize:clear --no-interaction || true
+# Composer scripts are skipped during build, so discover packages now
+php artisan package:discover --no-interaction || true
+php artisan config:cache --no-interaction
+php artisan route:cache  --no-interaction || php artisan route:clear --no-interaction
+php artisan view:cache   --no-interaction || true
+php artisan event:cache  --no-interaction || true
+
+echo "[entrypoint] Ready. Handing over to: $*"
+exec "$@"
