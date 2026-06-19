@@ -7,6 +7,7 @@ use App\Http\Controllers\AudienceController;
 use App\Http\Controllers\BabysitterController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\CommunityController;
+use App\Http\Controllers\ContactController;
 use App\Http\Controllers\FatherController;
 use App\Http\Controllers\ForumController;
 use App\Http\Controllers\HomeController;
@@ -25,6 +26,11 @@ Route::get('/voor', [AudienceController::class, 'index'])->name('audiences.index
 Route::get('/voor/{audience}', [AudienceController::class, 'show'])->name('audiences.show');
 Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
 Route::get('/blog/{article}', [BlogController::class, 'show'])->name('blog.show');
+
+// Contact
+Route::get('/contact', [ContactController::class, 'index'])->name('contact');
+Route::post('/contact', [ContactController::class, 'store'])
+    ->middleware('throttle:6,1')->name('contact.store');
 
 // Marktplaats — create routes registered before {listing} so they win the match
 Route::get('/marktplaats', [MarketplaceController::class, 'index'])->name('marketplace.index');
@@ -83,6 +89,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::delete('/babysitters/{babysitter}', [AdminController::class, 'destroyBabysitter'])->name('babysitters.destroy');
     Route::delete('/articles/{article}', [AdminController::class, 'destroyArticle'])->name('articles.destroy');
     Route::patch('/users/{user}/toggle-admin', [AdminController::class, 'toggleAdmin'])->name('users.toggle-admin');
+
+    // Contactberichten
+    Route::get('/contact', [AdminController::class, 'contact'])->name('contact.index');
+    Route::patch('/contact/{message}/handled', [AdminController::class, 'toggleContactHandled'])->name('contact.toggle');
+    Route::delete('/contact/{message}', [AdminController::class, 'destroyContact'])->name('contact.destroy');
 
     // Doelgroepen (audiences) beheer
     Route::get('/doelgroepen', [AdminController::class, 'audiences'])->name('audiences.index');

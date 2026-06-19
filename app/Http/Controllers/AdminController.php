@@ -7,6 +7,7 @@ use App\Models\Audience;
 use App\Models\Babysitter;
 use App\Models\Comment;
 use App\Models\CommunityGroup;
+use App\Models\ContactMessage;
 use App\Models\ForumCategory;
 use App\Models\ForumReply;
 use App\Models\ForumTopic;
@@ -24,6 +25,7 @@ class AdminController extends Controller
     public function dashboard(): Response
     {
         return Inertia::render('Admin/Dashboard', [
+            'openContactCount' => ContactMessage::whereNull('handled_at')->count(),
             'stats' => [
                 ['label' => 'Leden', 'value' => User::count(), 'emoji' => '👥'],
                 ['label' => 'Berichten', 'value' => Post::count(), 'emoji' => '💬'],
@@ -142,6 +144,39 @@ class AdminController extends Controller
             $user->is_admin = ! $user->is_admin;
             $user->save();
         }
+
+        return back();
+    }
+
+    // ---- Contactberichten ----
+
+    public function contact(): Response
+    {
+        return Inertia::render('Admin/Contact/Index', [
+            'messages' => ContactMessage::with('user:id,name')->latest()->get()->map(fn (ContactMessage $m) => [
+                'id' => $m->id,
+                'name' => $m->name,
+                'email' => $m->email,
+                'subject' => $m->subject,
+                'message' => $m->message,
+                'is_member' => (bool) $m->user_id,
+                'handled' => (bool) $m->handled_at,
+                'when' => $m->created_at->diffForHumans(),
+            ]),
+        ]);
+    }
+
+    public function toggleContactHandled(ContactMessage $message): RedirectResponse
+    {
+        $message->handled_at = $message->handled_at ? null : now();
+        $message->save();
+
+        return back();
+    }
+
+    public function destroyContact(ContactMessage $message): RedirectResponse
+    {
+        $message->delete();
 
         return back();
     }

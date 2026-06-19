@@ -1,9 +1,24 @@
 <script setup>
 import { Link, usePage } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 const page = usePage();
 const user = computed(() => page.props.auth?.user);
+
+// One-shot flash toast (success / error) shared from the server.
+const toast = ref(null);
+let toastTimer = null;
+watch(
+    () => page.props.flash,
+    (flash) => {
+        const message = flash?.success || flash?.error;
+        if (!message) return;
+        toast.value = { type: flash.success ? 'success' : 'error', message };
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => (toast.value = null), 5000);
+    },
+    { immediate: true, deep: true },
+);
 
 // Top-level nav: plain links + grouped dropdowns to keep the bar compact.
 const audiences = computed(() => page.props.audiences ?? []);
@@ -68,6 +83,7 @@ const footerColumns = [
         children: [
             { label: 'Alle doelgroepen', routeName: 'audiences.index' },
             { label: 'Inspiratie & blog', routeName: 'blog.index' },
+            { label: 'Contact', routeName: 'contact' },
         ],
     },
 ];
@@ -237,6 +253,41 @@ const navStyle = (active) =>
                 </div>
             </div>
         </nav>
+
+        <!-- Flash toast -->
+        <transition
+            enter-active-class="transition ease-out duration-200"
+            enter-from-class="opacity-0 translate-y-2"
+            leave-active-class="transition ease-in duration-150"
+            leave-to-class="opacity-0 translate-y-2"
+        >
+            <div
+                v-if="toast"
+                @click="toast = null"
+                :style="{
+                    position: 'fixed',
+                    top: '20px',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    zIndex: 200,
+                    cursor: 'pointer',
+                    maxWidth: '92vw',
+                    fontFamily: 'Quicksand, sans-serif',
+                    fontWeight: 600,
+                    fontSize: '14px',
+                    padding: '13px 22px',
+                    borderRadius: '999px',
+                    boxShadow: '0 12px 30px rgba(180, 150, 150, 0.28)',
+                    color: '#fff',
+                    background:
+                        toast.type === 'success'
+                            ? 'linear-gradient(135deg, #7bc89a, #5fa07c)'
+                            : 'linear-gradient(135deg, #f28b82, #d9695f)',
+                }"
+            >
+                {{ toast.type === 'success' ? '✓' : '⚠' }} {{ toast.message }}
+            </div>
+        </transition>
 
         <main style="max-width: 1180px; margin: 0 auto; padding: 0 24px 90px">
             <slot />

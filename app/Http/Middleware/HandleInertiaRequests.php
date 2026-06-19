@@ -39,6 +39,11 @@ class HandleInertiaRequests extends Middleware
             'audiences' => Schema::hasTable('audiences')
                 ? Audience::orderBy('position')->get(['slug', 'name', 'emoji'])
                 : [],
+            // One-shot toast messages set with ->with('success'|'error', ...).
+            'flash' => [
+                'success' => fn () => $request->session()->get('success'),
+                'error' => fn () => $request->session()->get('error'),
+            ],
         ];
     }
 }
