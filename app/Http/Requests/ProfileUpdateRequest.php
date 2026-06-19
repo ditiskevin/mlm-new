@@ -32,7 +32,8 @@ class ProfileUpdateRequest extends FormRequest
             'role_label' => ['nullable', 'string', 'max:80'],
             'bio' => ['nullable', 'string', 'max:500'],
             'avatar_color' => ['nullable', 'string', 'regex:/^#([0-9A-Fa-f]{6})$/'],
-            'avatar' => ['nullable', 'image', 'max:4096'],
+            'avatar' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:8192', 'dimensions:min_width=80,min_height=80'],
+            'remove_avatar' => ['nullable', 'boolean'],
         ];
     }
 }

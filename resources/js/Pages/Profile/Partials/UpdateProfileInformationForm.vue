@@ -39,6 +39,7 @@ const form = useForm({
     bio: user.bio ?? '',
     avatar_color: user.avatar_color ?? '#F7A8B5',
     avatar: null,
+    remove_avatar: false,
 });
 
 const toggleOptional = (field, key) => {
@@ -48,11 +49,40 @@ const toggleOptional = (field, key) => {
 const swatches = ['#F7A8B5', '#F28B82', '#E0A24A', '#7FC0A0', '#5FB07F', '#7AA8DC', '#A9CCE8', '#A87FD0', '#D3BCE6', '#C99BA2'];
 
 const avatarPreview = ref(user.avatar_url ?? null);
+const fileError = ref(null);
+
 const onAvatarChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    fileError.value = null;
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+        fileError.value = 'Kies een JPG, PNG of WebP-bestand.';
+        return;
+    }
+    if (file.size > 8 * 1024 * 1024) {
+        fileError.value = 'De foto mag maximaal 8 MB zijn.';
+        return;
+    }
     form.avatar = file;
+    form.remove_avatar = false;
     avatarPreview.value = URL.createObjectURL(file);
+};
+
+const removeAvatar = () => {
+    form.avatar = null;
+    form.remove_avatar = true;
+    avatarPreview.value = null;
+};
+
+const submit = () => {
+    // Inertia spoofs PATCH as multipart POST automatically when a File is present.
+    form.patch(route('profile.update'), {
+        preserveScroll: true,
+        onSuccess: () => {
+            form.avatar = null;
+            form.remove_avatar = false;
+        },
+    });
 };
 
 const typeChipStyle = (active) =>
@@ -73,7 +103,7 @@ const typeChipStyle = (active) =>
         </header>
 
         <form
-            @submit.prevent="form.patch(route('profile.update'))"
+            @submit.prevent="submit"
             class="mt-6 space-y-6"
         >
             <div>
@@ -181,9 +211,9 @@ const typeChipStyle = (active) =>
 
                     <label style="font-family: 'Quicksand', sans-serif; font-weight: 600; font-size: 13px; color: #c0566b; background: #fce7eb; border-radius: 999px; padding: 9px 14px; cursor: pointer">
                         Foto uploaden
-                        <input type="file" accept="image/*" class="hidden" @change="onAvatarChange" />
+                        <input type="file" accept="image/jpeg,image/png,image/webp" class="hidden" @change="onAvatarChange" />
                     </label>
-                    <button v-if="avatarPreview" type="button" @click="form.avatar = null; avatarPreview = user.avatar_url ?? null" style="font-family: 'Quicksand', sans-serif; font-weight: 600; font-size: 12.5px; color: #9a8d88; background: none; border: none; cursor: pointer">Annuleer</button>
+                    <button v-if="avatarPreview" type="button" @click="removeAvatar" style="font-family: 'Quicksand', sans-serif; font-weight: 600; font-size: 12.5px; color: #b4574e; background: none; border: none; cursor: pointer">Foto verwijderen</button>
 
                     <div class="flex flex-wrap items-center gap-2">
                         <button
@@ -204,6 +234,11 @@ const typeChipStyle = (active) =>
                     </div>
                 </div>
 
+                <p style="font-size: 12.5px; color: #a99b96; margin: 10px 0 0">
+                    JPG, PNG of WebP, max 8 MB. Je foto wordt automatisch vierkant bijgesneden. Geen foto? Dan tonen we je kleur met je initiaal.
+                </p>
+                <p v-if="fileError" style="font-size: 12.5px; color: #d9695f; margin: 6px 0 0">{{ fileError }}</p>
+                <InputError class="mt-2" :message="form.errors.avatar" />
                 <InputError class="mt-2" :message="form.errors.avatar_color" />
             </div>
 
