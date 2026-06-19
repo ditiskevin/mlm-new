@@ -22,6 +22,14 @@ body {
     color: #5b3a3f;
 }
 
+/* Break long words/URLs so user content can't force horizontal overflow
+   (this also lets grid "auto" tracks shrink to the container on mobile). */
+main p,
+main .mlm-break {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
 @keyframes floaty {
     0%,
     100% {
@@ -100,24 +108,23 @@ body {
 }
 
 @media (max-width: 820px) {
-    /* Collapse all multi-column grids to a single column. */
-    [style*="grid-template-columns: repeat("],
-    [style*="grid-template-columns: 1.4fr"],
-    [style*="grid-template-columns: 1fr 1fr"],
-    [style*="grid-template-columns: 2fr 1fr"],
-    [style*="grid-template-columns: 1.5fr 1fr"],
-    [style*="grid-template-columns: 1.05fr"],
-    [style*="grid-template-columns: 1fr 90px"],
-    [style*="grid-template-columns: 120px 1fr"],
-    [style*="grid-template-columns: 230px"],
-    [style*="minmax(0, 1fr)"] {
-        grid-template-columns: 1fr !important;
+    /* Collapse EVERY grid to a single, container-bounded column. This covers
+       both explicit multi-column layouts and "gap-only" grids used as vertical
+       stacks (whose implicit auto column would otherwise size to max-content
+       and overflow the viewport on mobile). */
+    [style*="display: grid"] {
+        grid-template-columns: minmax(0, 1fr) !important;
     }
 
     /* Sticky sidebars (top: 90px) shouldn't pin once stacked — but keep the
        nav (top: 0) sticky. */
     [style*="position: sticky; top: 90px"] {
         position: static !important;
+    }
+
+    /* Push secondary sidebars below the main content once stacked. */
+    .mlm-mobile-last {
+        order: 2 !important;
     }
 
     /* Wide data tables scroll horizontally instead of overflowing. */

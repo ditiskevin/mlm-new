@@ -32,6 +32,7 @@ const remove = (u) => {
             <div
                 v-for="u in users"
                 :key="u.id"
+                class="mlm-wrap-mobile"
                 style="display: flex; align-items: center; gap: 14px; background: #fff; border: 1px solid #f2e7e2; border-radius: 16px; padding: 13px 18px; box-shadow: 0 6px 16px rgba(180, 150, 150, 0.05)"
             >
                 <div style="flex: 1; min-width: 0">

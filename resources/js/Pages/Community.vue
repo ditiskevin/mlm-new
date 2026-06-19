@@ -98,7 +98,7 @@ const likeBtnStyle = (isLiked) =>
 
             <div style="display: grid; grid-template-columns: 320px minmax(0, 1fr); align-items: start; gap: 48px">
                 <!-- sidebar -->
-                <div style="min-width: 0; display: grid; gap: 20px; position: sticky; top: 90px">
+                <div class="mlm-mobile-last" style="min-width: 0; display: grid; gap: 20px; position: sticky; top: 90px">
                     <div style="background: #fff; border: 1px solid #f2e7e2; border-radius: 24px; overflow: hidden; box-shadow: 0 10px 26px rgba(180, 150, 150, 0.09)">
                         <div style="height: 78px; background: linear-gradient(120deg, #f9c8d0, #b7e1c0)"></div>
                         <div style="padding: 0 20px 20px; margin-top: -34px">

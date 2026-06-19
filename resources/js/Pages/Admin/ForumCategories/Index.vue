@@ -21,7 +21,7 @@ const remove = (c) => {
         <p style="font-size: 14.5px; color: #7a6c67; margin: 0 0 18px">Onderverdeel het forum in thema's.</p>
 
         <div style="display: grid; gap: 10px">
-            <div v-for="c in categories" :key="c.slug" style="display: flex; align-items: center; gap: 14px; background: #fff; border: 1px solid #f2e7e2; border-radius: 16px; padding: 13px 18px; box-shadow: 0 6px 16px rgba(180, 150, 150, 0.05)">
+            <div v-for="c in categories" :key="c.slug" class="mlm-wrap-mobile" style="display: flex; align-items: center; gap: 14px; background: #fff; border: 1px solid #f2e7e2; border-radius: 16px; padding: 13px 18px; box-shadow: 0 6px 16px rgba(180, 150, 150, 0.05)">
                 <span :style="{ width: '40px', height: '40px', borderRadius: '13px', flex: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', background: 'linear-gradient(135deg,' + c.color_from + ',' + c.color_to + ')' }">{{ c.emoji }}</span>
                 <div style="flex: 1; min-width: 0">
                     <div style="font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 14.5px; color: #473537">{{ c.name }} <span style="font-weight: 400; color: #b5a8a3; font-size: 12.5px">· {{ c.topics_count }} onderwerpen</span></div>
