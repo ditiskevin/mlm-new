@@ -46,6 +46,10 @@ class HandleInertiaRequests extends Middleware
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),
             ],
+            // Sidebar badge counts — only computed on admin pages.
+            'adminBadges' => fn () => ($request->user()?->is_admin && $request->routeIs('admin.*'))
+                ? \App\Http\Controllers\AdminController::sidebarBadges()
+                : null,
         ];
     }
 }

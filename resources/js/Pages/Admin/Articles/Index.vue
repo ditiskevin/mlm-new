@@ -1,5 +1,5 @@
 <script setup>
-import MlmLayout from '@/Layouts/MlmLayout.vue';
+import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 
 defineProps({
@@ -21,7 +21,7 @@ const statusBadge = {
 
 <template>
     <Head title="Blogbeheer · Beheer" />
-    <MlmLayout>
+    <AdminLayout>
         <section style="padding: 38px 0 8px">
             <Link :href="route('admin.dashboard')" style="font-size: 13px; color: #9a8d88; text-decoration: none">← Terug naar beheer</Link>
             <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin: 8px 0 6px">
@@ -50,5 +50,5 @@ const statusBadge = {
                 <div v-if="!articles.length" style="background: #fff; border: 1px dashed #f0d6dc; border-radius: 16px; padding: 36px; text-align: center; color: #8a7d78">Nog geen artikelen. Maak er één aan! ✍️</div>
             </div>
         </section>
-    </MlmLayout>
+    </AdminLayout>
 </template>

@@ -1,5 +1,5 @@
 <script setup>
-import MlmLayout from '@/Layouts/MlmLayout.vue';
+import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 
 defineProps({
@@ -16,7 +16,7 @@ const reject = (slug) => {
 
 <template>
     <Head title="Blog-inzendingen · Beheer" />
-    <MlmLayout>
+    <AdminLayout>
         <section style="padding: 38px 0 8px">
             <Link :href="route('admin.dashboard')" style="font-size: 13px; color: #9a8d88; text-decoration: none">← Terug naar beheer</Link>
             <h1 style="font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 32px; color: #473537; margin: 8px 0 6px; letter-spacing: -0.4px">Blog-inzendingen</h1>
@@ -45,5 +45,5 @@ const reject = (slug) => {
                 <div v-if="!articles.length" style="background: #fff; border: 1px dashed #f0d6dc; border-radius: 16px; padding: 36px; text-align: center; color: #8a7d78">Geen open inzendingen. 🌿</div>
             </div>
         </section>
-    </MlmLayout>
+    </AdminLayout>
 </template>

@@ -104,6 +104,36 @@ Route::middleware('auth')->group(function () {
 // Admin moderation area
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [AdminController::class, 'dashboard'])->name('dashboard');
+
+    // Leden
+    Route::get('/leden', [AdminController::class, 'usersIndex'])->name('users.index');
+    Route::get('/leden/{user}/bewerken', [AdminController::class, 'editUser'])->name('users.edit');
+    Route::patch('/leden/{user}', [AdminController::class, 'updateUser'])->name('users.update');
+
+    // Moderatielijsten (index-weergaven; verwijderroutes staan hieronder)
+    Route::get('/berichten', [AdminController::class, 'postsIndex'])->name('posts.index');
+    Route::get('/reacties', [AdminController::class, 'commentsIndex'])->name('comments.index');
+    Route::get('/forum-onderwerpen', [AdminController::class, 'topicsIndex'])->name('topics.index');
+    Route::get('/forum-reacties', [AdminController::class, 'repliesIndex'])->name('replies.index');
+    Route::get('/marktplaats', [AdminController::class, 'listingsIndex'])->name('listings.index');
+    Route::get('/oppasprofielen', [AdminController::class, 'babysittersIndex'])->name('babysitters.index');
+
+    // Groepen (CRUD)
+    Route::get('/groepen', [AdminController::class, 'groupsIndex'])->name('groups.index');
+    Route::get('/groepen/nieuw', [AdminController::class, 'createGroup'])->name('groups.create');
+    Route::post('/groepen', [AdminController::class, 'storeGroup'])->name('groups.store');
+    Route::get('/groepen/{group}/bewerken', [AdminController::class, 'editGroup'])->name('groups.edit');
+    Route::patch('/groepen/{group}', [AdminController::class, 'updateGroup'])->name('groups.update');
+    Route::delete('/groepen/{group}', [AdminController::class, 'destroyGroup'])->name('groups.destroy');
+
+    // Forumcategorieën (CRUD)
+    Route::get('/forum-categorieen', [AdminController::class, 'forumCategoriesIndex'])->name('forum-categories.index');
+    Route::get('/forum-categorieen/nieuw', [AdminController::class, 'createForumCategory'])->name('forum-categories.create');
+    Route::post('/forum-categorieen', [AdminController::class, 'storeForumCategory'])->name('forum-categories.store');
+    Route::get('/forum-categorieen/{category}/bewerken', [AdminController::class, 'editForumCategory'])->name('forum-categories.edit');
+    Route::patch('/forum-categorieen/{category}', [AdminController::class, 'updateForumCategory'])->name('forum-categories.update');
+    Route::delete('/forum-categorieen/{category}', [AdminController::class, 'destroyForumCategory'])->name('forum-categories.destroy');
+
     Route::delete('/posts/{post}', [AdminController::class, 'destroyPost'])->name('posts.destroy');
     Route::delete('/comments/{comment}', [AdminController::class, 'destroyComment'])->name('comments.destroy');
     Route::delete('/forum-topics/{topic}', [AdminController::class, 'destroyTopic'])->name('topics.destroy');

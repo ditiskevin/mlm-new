@@ -1,5 +1,5 @@
 <script setup>
-import MlmLayout from '@/Layouts/MlmLayout.vue';
+import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 
 const props = defineProps({
@@ -15,7 +15,7 @@ const remove = (slug) => {
 
 <template>
     <Head title="Doelgroepen beheren" />
-    <MlmLayout>
+    <AdminLayout>
         <section style="padding: 38px 0 8px">
             <Link :href="route('admin.dashboard')" style="font-size: 13.5px; font-weight: 600; color: #c0566b; text-decoration: none">‹ Terug naar beheer</Link>
             <div style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 16px; margin: 14px 0 22px">
@@ -40,5 +40,5 @@ const remove = (slug) => {
                 <div v-if="!audiences.length" style="background: #fff; border: 1px dashed #f0d6dc; border-radius: 16px; padding: 30px; text-align: center; color: #8a7d78">Nog geen doelgroepen.</div>
             </div>
         </section>
-    </MlmLayout>
+    </AdminLayout>
 </template>

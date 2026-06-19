@@ -1,5 +1,5 @@
 <script setup>
-import MlmLayout from '@/Layouts/MlmLayout.vue';
+import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 
 const props = defineProps({
@@ -36,7 +36,7 @@ const submit = () => {
 
 <template>
     <Head :title="isEdit ? 'Artikel bewerken' : 'Nieuw artikel'" />
-    <MlmLayout>
+    <AdminLayout>
         <section style="max-width: 740px; margin: 0 auto; padding: 36px 0 8px">
             <Link :href="route('admin.articles.index')" style="font-size: 13.5px; font-weight: 600; color: #c0566b; text-decoration: none">‹ Terug naar blogbeheer</Link>
             <h1 style="font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 28px; color: #473537; margin: 14px 0 18px; letter-spacing: -0.4px">{{ isEdit ? 'Artikel bewerken' : 'Nieuw artikel' }}</h1>
@@ -104,5 +104,5 @@ const submit = () => {
                 </div>
             </form>
         </section>
-    </MlmLayout>
+    </AdminLayout>
 </template>

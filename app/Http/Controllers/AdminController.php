@@ -23,72 +23,128 @@ use Inertia\Response;
 
 class AdminController extends Controller
 {
+    /**
+     * Counts used to badge the admin sidebar — shared on every admin page.
+     *
+     * @return array<string, int>
+     */
+    public static function sidebarBadges(): array
+    {
+        return [
+            'reports' => Report::where('status', 'open')->count(),
+            'contact' => ContactMessage::whereNull('handled_at')->count(),
+            'pendingArticles' => Article::where('status', 'pending')->count(),
+        ];
+    }
+
     public function dashboard(): Response
     {
-        return Inertia::render('Admin/Dashboard', [
-            'openContactCount' => ContactMessage::whereNull('handled_at')->count(),
-            'pendingArticleCount' => Article::where('status', 'pending')->count(),
-            'openReportCount' => Report::where('status', 'open')->count(),
+        return Inertia::render('Admin/Overview', [
             'stats' => [
-                ['label' => 'Leden', 'value' => User::count(), 'emoji' => '👥'],
-                ['label' => 'Berichten', 'value' => Post::count(), 'emoji' => '💬'],
-                ['label' => 'Reacties', 'value' => Comment::count() + ForumReply::count(), 'emoji' => '💭'],
-                ['label' => 'Forumonderwerpen', 'value' => ForumTopic::count(), 'emoji' => '🗣️'],
-                ['label' => 'Advertenties', 'value' => Listing::count(), 'emoji' => '🛍️'],
-                ['label' => 'Oppasprofielen', 'value' => Babysitter::count(), 'emoji' => '🧸'],
+                ['label' => 'Leden', 'value' => User::count(), 'emoji' => '👥', 'route' => 'admin.users.index'],
+                ['label' => 'Berichten', 'value' => Post::count(), 'emoji' => '💬', 'route' => 'admin.posts.index'],
+                ['label' => 'Reacties', 'value' => Comment::count(), 'emoji' => '💭', 'route' => 'admin.comments.index'],
+                ['label' => 'Groepen', 'value' => CommunityGroup::count(), 'emoji' => '👪', 'route' => 'admin.groups.index'],
+                ['label' => 'Forumonderwerpen', 'value' => ForumTopic::count(), 'emoji' => '🗣️', 'route' => 'admin.topics.index'],
+                ['label' => 'Forumreacties', 'value' => ForumReply::count(), 'emoji' => '↩️', 'route' => 'admin.replies.index'],
+                ['label' => 'Advertenties', 'value' => Listing::count(), 'emoji' => '🛍️', 'route' => 'admin.listings.index'],
+                ['label' => 'Oppasprofielen', 'value' => Babysitter::count(), 'emoji' => '🧸', 'route' => 'admin.babysitters.index'],
+                ['label' => 'Blogartikelen', 'value' => Article::count(), 'emoji' => '📚', 'route' => 'admin.articles.index'],
+                ['label' => 'Doelgroepen', 'value' => Audience::count(), 'emoji' => '🎯', 'route' => 'admin.audiences.index'],
             ],
-            'posts' => Post::latest()->take(20)->get()->map(fn (Post $p) => [
-                'id' => $p->id,
-                'author' => $p->author_name,
-                'excerpt' => Str::limit($p->body, 100),
-                'when' => $p->created_at->diffForHumans(),
-            ]),
-            'comments' => Comment::with('post')->latest()->take(20)->get()->map(fn (Comment $c) => [
-                'id' => $c->id,
-                'author' => $c->author_name,
-                'excerpt' => Str::limit($c->body, 100),
-                'when' => $c->created_at->diffForHumans(),
-            ]),
-            'topics' => ForumTopic::with('category')->latest()->take(20)->get()->map(fn (ForumTopic $t) => [
-                'id' => $t->slug,
-                'title' => $t->title,
-                'author' => $t->author_name,
-                'category' => $t->category?->name,
-                'when' => $t->created_at->diffForHumans(),
-            ]),
-            'replies' => ForumReply::latest()->take(20)->get()->map(fn (ForumReply $r) => [
-                'id' => $r->id,
-                'author' => $r->author_name,
-                'excerpt' => Str::limit($r->body, 100),
-                'when' => $r->created_at->diffForHumans(),
-            ]),
-            'listings' => Listing::latest()->take(20)->get()->map(fn (Listing $l) => [
-                'id' => $l->slug,
-                'title' => $l->title,
-                'author' => $l->author_name,
-                'category' => $l->category,
-                'when' => $l->created_at->diffForHumans(),
-            ]),
-            'babysitters' => Babysitter::latest()->take(20)->get()->map(fn (Babysitter $b) => [
-                'id' => $b->id,
-                'name' => $b->name,
-                'location' => $b->location,
-                'when' => $b->created_at->diffForHumans(),
-            ]),
-            'articles' => Article::latest()->take(20)->get()->map(fn (Article $a) => [
-                'id' => $a->slug,
-                'title' => $a->title,
-                'category' => $a->category,
-                'when' => optional($a->published_at)->diffForHumans(),
-            ]),
-            'users' => User::orderBy('name')->get()->map(fn (User $u) => [
+            'alerts' => [
+                ['label' => 'Open meldingen', 'value' => Report::where('status', 'open')->count(), 'emoji' => '🚩', 'route' => 'admin.reports.index'],
+                ['label' => 'Onbehandelde contactberichten', 'value' => ContactMessage::whereNull('handled_at')->count(), 'emoji' => '✉️', 'route' => 'admin.contact.index'],
+                ['label' => 'Blog-inzendingen te beoordelen', 'value' => Article::where('status', 'pending')->count(), 'emoji' => '📝', 'route' => 'admin.articles.pending'],
+            ],
+            'recent' => [
+                'members' => User::latest()->take(6)->get()->map(fn (User $u) => [
+                    'id' => $u->id,
+                    'name' => $u->name,
+                    'when' => $u->created_at->diffForHumans(),
+                ]),
+                'posts' => Post::latest()->take(6)->get()->map(fn (Post $p) => [
+                    'id' => $p->id,
+                    'author' => $p->author_name,
+                    'excerpt' => Str::limit($p->body, 80),
+                    'when' => $p->created_at->diffForHumans(),
+                ]),
+            ],
+        ]);
+    }
+
+    // ---- Leden (users) ----
+
+    public function usersIndex(Request $request): Response
+    {
+        $q = trim((string) $request->query('q'));
+
+        $users = User::query()
+            ->when($q !== '', fn ($query) => $query->where(fn ($w) => $w->where('name', 'like', "%{$q}%")->orWhere('email', 'like', "%{$q}%")))
+            ->orderBy('name')
+            ->get()
+            ->map(fn (User $u) => [
                 'id' => $u->id,
                 'name' => $u->name,
                 'email' => $u->email,
-                'is_admin' => $u->is_admin,
+                'role' => $u->parent_type_label,
+                'is_admin' => (bool) $u->is_admin,
                 'is_self' => $u->id === auth()->id(),
-            ]),
+                'posts_count' => $u->posts()->count(),
+                'when' => $u->created_at?->translatedFormat('j M Y'),
+                'profile_url' => route('members.show', $u->id),
+            ]);
+
+        return Inertia::render('Admin/Users/Index', [
+            'users' => $users,
+            'filters' => ['q' => $q],
         ]);
+    }
+
+    public function editUser(User $user): Response
+    {
+        return Inertia::render('Admin/Users/Edit', [
+            'member' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role_label' => $user->role_label,
+                'bio' => $user->bio,
+                'parent_type' => $user->parent_type ?? 'ouder',
+                'gender' => $user->gender,
+                'parenting_role' => $user->parenting_role,
+                'is_admin' => (bool) $user->is_admin,
+                'is_self' => $user->id === auth()->id(),
+            ],
+            'parentTypes' => User::parentTypeMap(),
+            'genders' => User::GENDERS,
+            'parentingRoles' => User::PARENTING_ROLES,
+        ]);
+    }
+
+    public function updateUser(Request $request, User $user): RedirectResponse
+    {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email,'.$user->id],
+            'role_label' => ['nullable', 'string', 'max:80'],
+            'bio' => ['nullable', 'string', 'max:500'],
+            'parent_type' => ['required', 'in:'.implode(',', array_keys(User::parentTypeMap()))],
+            'gender' => ['nullable', 'in:'.implode(',', array_keys(User::GENDERS))],
+            'parenting_role' => ['nullable', 'in:'.implode(',', array_keys(User::PARENTING_ROLES))],
+            'is_admin' => ['boolean'],
+        ]);
+
+        // Admins can't strip their own admin rights here (avoid lock-out).
+        $isAdmin = ($data['is_admin'] ?? false) || $user->id === auth()->id();
+        unset($data['is_admin']);
+
+        $user->fill($data);
+        // is_admin is guarded against mass assignment, so set it explicitly.
+        $user->is_admin = $isAdmin;
+        $user->save();
+
+        return redirect()->route('admin.users.index')->with('success', 'Lid bijgewerkt.');
     }
 
     public function destroyPost(Post $post): RedirectResponse
@@ -96,6 +152,287 @@ class AdminController extends Controller
         $post->delete();
 
         return back();
+    }
+
+    // ---- Generieke moderatielijsten (berichten, reacties, forum, etc.) ----
+
+    public function postsIndex(): Response
+    {
+        return Inertia::render('Admin/Resource', [
+            'title' => 'Berichten',
+            'description' => 'Alle community-berichten. Verwijder ongepaste inhoud.',
+            'columns' => [['key' => 'author', 'label' => 'Auteur'], ['key' => 'excerpt', 'label' => 'Bericht'], ['key' => 'when', 'label' => 'Geplaatst']],
+            'deleteRoute' => 'admin.posts.destroy',
+            'rows' => Post::latest()->get()->map(fn (Post $p) => [
+                'id' => $p->id,
+                'author' => $p->author_name,
+                'excerpt' => Str::limit($p->body, 110),
+                'when' => $p->created_at->diffForHumans(),
+                'view_url' => route('community'),
+            ]),
+        ]);
+    }
+
+    public function commentsIndex(): Response
+    {
+        return Inertia::render('Admin/Resource', [
+            'title' => 'Reacties',
+            'description' => 'Reacties op community-berichten.',
+            'columns' => [['key' => 'author', 'label' => 'Auteur'], ['key' => 'excerpt', 'label' => 'Reactie'], ['key' => 'when', 'label' => 'Geplaatst']],
+            'deleteRoute' => 'admin.comments.destroy',
+            'rows' => Comment::latest()->get()->map(fn (Comment $c) => [
+                'id' => $c->id,
+                'author' => $c->author_name,
+                'excerpt' => Str::limit($c->body, 110),
+                'when' => $c->created_at->diffForHumans(),
+            ]),
+        ]);
+    }
+
+    public function topicsIndex(): Response
+    {
+        return Inertia::render('Admin/Resource', [
+            'title' => 'Forumonderwerpen',
+            'description' => 'Alle onderwerpen in het forum.',
+            'columns' => [['key' => 'title', 'label' => 'Titel'], ['key' => 'author', 'label' => 'Auteur'], ['key' => 'category', 'label' => 'Categorie'], ['key' => 'when', 'label' => 'Gestart']],
+            'deleteRoute' => 'admin.topics.destroy',
+            'rows' => ForumTopic::with('category')->latest()->get()->map(fn (ForumTopic $t) => [
+                'id' => $t->slug,
+                'title' => $t->title,
+                'author' => $t->author_name,
+                'category' => $t->category?->name,
+                'when' => $t->created_at->diffForHumans(),
+                'view_url' => route('forum.topic', $t->slug),
+            ]),
+        ]);
+    }
+
+    public function repliesIndex(): Response
+    {
+        return Inertia::render('Admin/Resource', [
+            'title' => 'Forumreacties',
+            'description' => 'Reacties op forumonderwerpen.',
+            'columns' => [['key' => 'author', 'label' => 'Auteur'], ['key' => 'excerpt', 'label' => 'Reactie'], ['key' => 'when', 'label' => 'Geplaatst']],
+            'deleteRoute' => 'admin.replies.destroy',
+            'rows' => ForumReply::latest()->get()->map(fn (ForumReply $r) => [
+                'id' => $r->id,
+                'author' => $r->author_name,
+                'excerpt' => Str::limit($r->body, 110),
+                'when' => $r->created_at->diffForHumans(),
+            ]),
+        ]);
+    }
+
+    public function listingsIndex(): Response
+    {
+        return Inertia::render('Admin/Resource', [
+            'title' => 'Marktplaats',
+            'description' => 'Advertenties op de marktplaats.',
+            'columns' => [['key' => 'title', 'label' => 'Titel'], ['key' => 'author', 'label' => 'Aanbieder'], ['key' => 'category', 'label' => 'Categorie'], ['key' => 'when', 'label' => 'Geplaatst']],
+            'deleteRoute' => 'admin.listings.destroy',
+            'rows' => Listing::latest()->get()->map(fn (Listing $l) => [
+                'id' => $l->slug,
+                'title' => $l->title,
+                'author' => $l->author_name,
+                'category' => $l->category,
+                'when' => $l->created_at->diffForHumans(),
+                'view_url' => route('marketplace.show', $l->slug),
+            ]),
+        ]);
+    }
+
+    public function babysittersIndex(): Response
+    {
+        return Inertia::render('Admin/Resource', [
+            'title' => 'Oppas',
+            'description' => 'Oppasprofielen en oproepen.',
+            'columns' => [['key' => 'name', 'label' => 'Naam'], ['key' => 'type', 'label' => 'Type'], ['key' => 'location', 'label' => 'Plaats'], ['key' => 'when', 'label' => 'Geplaatst']],
+            'deleteRoute' => 'admin.babysitters.destroy',
+            'rows' => Babysitter::latest()->get()->map(fn (Babysitter $b) => [
+                'id' => $b->id,
+                'name' => $b->name,
+                'type' => Babysitter::TYPES[$b->type] ?? $b->type,
+                'location' => $b->location,
+                'when' => $b->created_at->diffForHumans(),
+                'view_url' => route('babysitters.show', $b->id),
+            ]),
+        ]);
+    }
+
+    // ---- Groepen (CRUD) ----
+
+    public function groupsIndex(): Response
+    {
+        return Inertia::render('Admin/Groups/Index', [
+            'groups' => CommunityGroup::with('user:id,name')->orderByDesc('members')->get()->map(fn (CommunityGroup $g) => [
+                'id' => $g->id,
+                'name' => $g->name,
+                'description' => $g->description,
+                'members' => $g->members,
+                'owner' => $g->user?->name,
+                'color_from' => $g->color_from,
+                'color_to' => $g->color_to,
+            ]),
+        ]);
+    }
+
+    public function createGroup(): Response
+    {
+        return Inertia::render('Admin/Groups/Form', ['group' => null]);
+    }
+
+    public function editGroup(CommunityGroup $group): Response
+    {
+        return Inertia::render('Admin/Groups/Form', [
+            'group' => [
+                'id' => $group->id,
+                'name' => $group->name,
+                'description' => $group->description,
+                'members' => $group->members,
+                'color_from' => $group->color_from,
+                'color_to' => $group->color_to,
+            ],
+        ]);
+    }
+
+    public function storeGroup(Request $request): RedirectResponse
+    {
+        $data = $this->validateGroup($request);
+        CommunityGroup::create([
+            'name' => $data['name'],
+            'description' => $data['description'] ?? null,
+            'members' => $data['members'] ?? 0,
+            'color_from' => ($data['color_from'] ?? null) ?: '#FCE7EB',
+            'color_to' => ($data['color_to'] ?? null) ?: '#EAF5EE',
+        ]);
+
+        return redirect()->route('admin.groups.index')->with('success', 'Groep aangemaakt.');
+    }
+
+    public function updateGroup(Request $request, CommunityGroup $group): RedirectResponse
+    {
+        $data = $this->validateGroup($request);
+        $group->update([
+            'name' => $data['name'],
+            'description' => $data['description'] ?? null,
+            'members' => $data['members'] ?? $group->members,
+            'color_from' => ($data['color_from'] ?? null) ?: '#FCE7EB',
+            'color_to' => ($data['color_to'] ?? null) ?: '#EAF5EE',
+        ]);
+
+        return redirect()->route('admin.groups.index')->with('success', 'Groep bijgewerkt.');
+    }
+
+    public function destroyGroup(CommunityGroup $group): RedirectResponse
+    {
+        $group->delete();
+
+        return back()->with('success', 'Groep verwijderd.');
+    }
+
+    private function validateGroup(Request $request): array
+    {
+        return $request->validate([
+            'name' => ['required', 'string', 'max:60'],
+            'description' => ['nullable', 'string', 'max:500'],
+            'members' => ['nullable', 'integer', 'min:0', 'max:1000000'],
+            'color_from' => ['nullable', 'string', 'regex:/^#([0-9A-Fa-f]{6})$/'],
+            'color_to' => ['nullable', 'string', 'regex:/^#([0-9A-Fa-f]{6})$/'],
+        ]);
+    }
+
+    // ---- Forumcategorieën (CRUD) ----
+
+    public function forumCategoriesIndex(): Response
+    {
+        return Inertia::render('Admin/ForumCategories/Index', [
+            'categories' => ForumCategory::withCount('topics')->orderBy('position')->get()->map(fn (ForumCategory $c) => [
+                'slug' => $c->slug,
+                'name' => $c->name,
+                'description' => $c->description,
+                'emoji' => $c->emoji,
+                'topics_count' => $c->topics_count,
+                'color_from' => $c->color_from,
+                'color_to' => $c->color_to,
+            ]),
+        ]);
+    }
+
+    public function createForumCategory(): Response
+    {
+        return Inertia::render('Admin/ForumCategories/Form', ['category' => null]);
+    }
+
+    public function editForumCategory(ForumCategory $category): Response
+    {
+        return Inertia::render('Admin/ForumCategories/Form', [
+            'category' => [
+                'slug' => $category->slug,
+                'name' => $category->name,
+                'description' => $category->description,
+                'emoji' => $category->emoji,
+                'color_from' => $category->color_from,
+                'color_to' => $category->color_to,
+                'position' => $category->position,
+            ],
+        ]);
+    }
+
+    public function storeForumCategory(Request $request): RedirectResponse
+    {
+        $data = $this->validateForumCategory($request);
+        $base = Str::slug($data['name']) ?: 'categorie';
+        $slug = $base;
+        $i = 1;
+        while (ForumCategory::where('slug', $slug)->exists()) {
+            $slug = $base.'-'.(++$i);
+        }
+
+        ForumCategory::create([
+            'name' => $data['name'],
+            'slug' => $slug,
+            'description' => $data['description'],
+            'emoji' => ($data['emoji'] ?? null) ?: '💬',
+            'color_from' => ($data['color_from'] ?? null) ?: '#FCE7EB',
+            'color_to' => ($data['color_to'] ?? null) ?: '#EAF5EE',
+            'position' => $data['position'] ?? ((int) ForumCategory::max('position') + 1),
+        ]);
+
+        return redirect()->route('admin.forum-categories.index')->with('success', 'Categorie aangemaakt.');
+    }
+
+    public function updateForumCategory(Request $request, ForumCategory $category): RedirectResponse
+    {
+        $data = $this->validateForumCategory($request);
+        $category->update([
+            'name' => $data['name'],
+            'description' => $data['description'],
+            'emoji' => ($data['emoji'] ?? null) ?: '💬',
+            'color_from' => ($data['color_from'] ?? null) ?: '#FCE7EB',
+            'color_to' => ($data['color_to'] ?? null) ?: '#EAF5EE',
+            'position' => $data['position'] ?? $category->position,
+        ]);
+
+        return redirect()->route('admin.forum-categories.index')->with('success', 'Categorie bijgewerkt.');
+    }
+
+    public function destroyForumCategory(ForumCategory $category): RedirectResponse
+    {
+        $category->delete();
+
+        return back()->with('success', 'Categorie verwijderd.');
+    }
+
+    private function validateForumCategory(Request $request): array
+    {
+        return $request->validate([
+            'name' => ['required', 'string', 'max:60'],
+            'description' => ['required', 'string', 'max:200'],
+            'emoji' => ['nullable', 'string', 'max:8'],
+            'color_from' => ['nullable', 'string', 'regex:/^#([0-9A-Fa-f]{6})$/'],
+            'color_to' => ['nullable', 'string', 'regex:/^#([0-9A-Fa-f]{6})$/'],
+            'position' => ['nullable', 'integer', 'min:0', 'max:999'],
+        ]);
     }
 
     public function destroyComment(Comment $comment): RedirectResponse
