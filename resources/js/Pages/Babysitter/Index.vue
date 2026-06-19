@@ -7,6 +7,7 @@ const props = defineProps({
     sitters: { type: Array, required: true },
     locations: { type: Array, required: true },
     filters: { type: Object, default: () => ({}) },
+    counts: { type: Object, default: () => ({ aanbod: 0, gezocht: 0 }) },
 });
 
 const page = usePage();
@@ -14,7 +15,7 @@ const isAuth = computed(() => !!page.props.auth?.user);
 const search = ref(props.filters.q ?? '');
 
 const visit = (params) => {
-    const next = { location: props.filters.location, q: props.filters.q || undefined, ...params };
+    const next = { location: props.filters.location, q: props.filters.q || undefined, type: props.filters.type || undefined, ...params };
     Object.keys(next).forEach((k) => (next[k] == null || next[k] === '') && delete next[k]);
     router.get(route('babysitters.index'), next, { preserveScroll: true, preserveState: true });
 };
@@ -23,6 +24,11 @@ const pillStyle = (active) =>
     "flex:none;font-family:'Quicksand',sans-serif;font-weight:600;font-size:13px;border-radius:999px;padding:8px 15px;cursor:pointer;border:1.5px solid " +
     (active ? '#5FB07F' : '#E3EFE7') +
     ';background:' + (active ? '#E4F3E9' : '#fff') + ';color:' + (active ? '#5E9E78' : '#9a8d88');
+
+const typeTabStyle = (active) =>
+    "flex:none;font-family:'Poppins',sans-serif;font-weight:600;font-size:13.5px;border-radius:999px;padding:9px 18px;cursor:pointer;border:1.5px solid " +
+    (active ? '#F28B82' : '#EFE3E4') +
+    ';background:' + (active ? '#FCE7EB' : '#fff') + ';color:' + (active ? '#C0566B' : '#9a8d88');
 </script>
 
 <template>
@@ -33,13 +39,27 @@ const pillStyle = (active) =>
                 <div>
                     <span style="font-family: 'Dancing Script', cursive; font-size: 26px; color: #e0a24a">Vertrouwd &amp; dichtbij</span>
                     <h1 style="font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 34px; color: #473537; margin: 2px 0 6px; letter-spacing: -0.4px">Oppas vinden</h1>
-                    <p style="font-size: 15px; color: #7a6c67; margin: 0; max-width: 560px">Vind een betrouwbare oppas bij jou in de buurt, of meld je zelf aan om op te passen. Van ouder tot ouder.</p>
+                    <p style="font-size: 15px; color: #7a6c67; margin: 0; max-width: 560px">Vind een betrouwbare oppas bij jou in de buurt, meld je zelf aan om op te passen, of plaats een oproep als je juist een oppas zoekt. Van ouder tot ouder.</p>
                 </div>
-                <Link
-                    :href="isAuth ? route('babysitters.create') : route('login')"
-                    style="flex: none; font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 15px; color: #fff; background: linear-gradient(135deg, #8fd0a6, #5fb07f); border: none; border-radius: 999px; padding: 13px 24px; text-decoration: none; box-shadow: 0 10px 22px rgba(95, 176, 127, 0.3)"
-                    >+ Meld je aan als oppas</Link
-                >
+                <div style="display: flex; gap: 10px; flex-wrap: wrap">
+                    <Link
+                        :href="isAuth ? route('babysitters.create') : route('login')"
+                        style="flex: none; font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 14px; color: #fff; background: linear-gradient(135deg, #8fd0a6, #5fb07f); border: none; border-radius: 999px; padding: 12px 20px; text-decoration: none; box-shadow: 0 10px 22px rgba(95, 176, 127, 0.3)"
+                        >+ Ik bied oppas aan</Link
+                    >
+                    <Link
+                        :href="isAuth ? route('babysitters.create', { type: 'gezocht' }) : route('login')"
+                        style="flex: none; font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 14px; color: #fff; background: linear-gradient(135deg, #f7a8b5, #f28b82); border: none; border-radius: 999px; padding: 12px 20px; text-decoration: none; box-shadow: 0 10px 22px rgba(242, 139, 130, 0.3)"
+                        >+ Ik zoek een oppas</Link
+                    >
+                </div>
+            </div>
+
+            <!-- Type tabs -->
+            <div style="display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap">
+                <button @click="visit({ type: undefined })" :style="typeTabStyle(!filters.type)">Alles</button>
+                <button @click="visit({ type: 'aanbod' })" :style="typeTabStyle(filters.type === 'aanbod')">🧸 Oppas aangeboden ({{ counts.aanbod }})</button>
+                <button @click="visit({ type: 'gezocht' })" :style="typeTabStyle(filters.type === 'gezocht')">🔎 Oppas gezocht ({{ counts.gezocht }})</button>
             </div>
 
             <div style="display: flex; align-items: center; gap: 10px; background: #fff; border: 1px solid #f0e6e2; border-radius: 999px; padding: 11px 18px; max-width: 420px; margin-bottom: 14px">
@@ -61,15 +81,22 @@ const pillStyle = (active) =>
                 >
                     <div style="display: flex; align-items: center; gap: 13px; margin-bottom: 12px">
                         <span :style="{ width: '52px', height: '52px', borderRadius: '50%', flex: 'none', background: s.avatar_color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Poppins, sans-serif', fontWeight: 700, color: '#fff', fontSize: '20px' }">{{ s.initial }}</span>
-                        <div>
+                        <div style="flex: 1; min-width: 0">
                             <div style="font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 17px; color: #473537">{{ s.name }}<span v-if="s.age" style="font-weight: 500; color: #9a8d88">, {{ s.age }}</span></div>
                             <div style="font-size: 12.5px; color: #9a8d88">📍 {{ s.location }}</div>
                         </div>
+                        <span
+                            :style="{ flex: 'none', fontSize: '11px', fontWeight: 600, borderRadius: '999px', padding: '4px 10px', color: s.type === 'gezocht' ? '#c0566b' : '#5e9e78', background: s.type === 'gezocht' ? '#fce7eb' : '#e4f3e9' }"
+                            >{{ s.type === 'gezocht' ? 'Gezocht' : 'Aangeboden' }}</span
+                        >
                     </div>
                     <p style="font-size: 13.5px; line-height: 1.55; color: #8a7d78; margin: 0 0 12px">{{ s.excerpt }}</p>
                     <div style="display: flex; align-items: center; justify-content: space-between">
-                        <span style="font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 15px; color: #5fa07c">{{ s.hourly_rate ? '€ ' + s.hourly_rate + ' /uur' : 'In overleg' }}</span>
-                        <span v-if="s.has_vog" style="font-size: 11.5px; font-weight: 600; color: #5e9e78; background: #e4f3e9; border-radius: 999px; padding: 4px 10px">✓ VOG</span>
+                        <span :style="{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, fontSize: '15px', color: s.type === 'gezocht' ? '#c0566b' : '#5fa07c' }">
+                            <template v-if="s.type === 'gezocht'">{{ s.hourly_rate ? 'Budget € ' + s.hourly_rate + ' /uur' : 'Budget in overleg' }}</template>
+                            <template v-else>{{ s.hourly_rate ? '€ ' + s.hourly_rate + ' /uur' : 'In overleg' }}</template>
+                        </span>
+                        <span v-if="s.type === 'aanbod' && s.has_vog" style="font-size: 11.5px; font-weight: 600; color: #5e9e78; background: #e4f3e9; border-radius: 999px; padding: 4px 10px">✓ VOG</span>
                     </div>
                 </Link>
             </div>

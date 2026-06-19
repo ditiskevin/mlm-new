@@ -10,6 +10,7 @@ const props = defineProps({
 
 const isAuth = computed(() => !!usePage().props.auth?.user);
 const canMessage = computed(() => props.sitter.owner_id && !props.sitter.canDelete);
+const isOffer = computed(() => props.sitter.type !== 'gezocht');
 
 const remove = () => {
     if (confirm('Weet je zeker dat je dit oppasprofiel wilt verwijderen?')) {
@@ -25,27 +26,28 @@ const remove = () => {
             <Link :href="route('babysitters.index')" style="font-size: 13.5px; font-weight: 600; color: #5fa07c; text-decoration: none">‹ Terug naar oppas vinden</Link>
 
             <div style="margin-top: 16px; background: #fff; border: 1px solid #f2e7e2; border-radius: 26px; overflow: hidden; box-shadow: 0 12px 30px rgba(180, 150, 150, 0.1)">
-                <div style="height: 90px; background: linear-gradient(120deg, #b7e1c0, #f9c8d0)"></div>
+                <div :style="{ height: '90px', background: isOffer ? 'linear-gradient(120deg, #b7e1c0, #f9c8d0)' : 'linear-gradient(120deg, #f9c8d0, #b7e1c0)' }"></div>
                 <div style="padding: 0 28px 28px; margin-top: -40px">
                     <span :style="{ width: '80px', height: '80px', borderRadius: '50%', background: sitter.avatar_color, border: '5px solid #fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Poppins, sans-serif', fontWeight: 700, color: '#fff', fontSize: '30px' }">{{ sitter.initial }}</span>
-                    <div style="display: flex; align-items: center; gap: 10px; margin-top: 10px">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-top: 10px; flex-wrap: wrap">
                         <h1 style="font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 26px; color: #473537; margin: 0">{{ sitter.name }}<span v-if="sitter.age" style="font-weight: 500; color: #9a8d88">, {{ sitter.age }}</span></h1>
-                        <span v-if="sitter.has_vog" style="font-size: 12px; font-weight: 600; color: #5e9e78; background: #e4f3e9; border-radius: 999px; padding: 5px 12px">✓ VOG aanwezig</span>
+                        <span :style="{ fontSize: '12px', fontWeight: 600, borderRadius: '999px', padding: '5px 12px', color: isOffer ? '#5e9e78' : '#c0566b', background: isOffer ? '#e4f3e9' : '#fce7eb' }">{{ sitter.type_label }}</span>
+                        <span v-if="isOffer && sitter.has_vog" style="font-size: 12px; font-weight: 600; color: #5e9e78; background: #e4f3e9; border-radius: 999px; padding: 5px 12px">✓ VOG aanwezig</span>
                     </div>
                     <div style="font-size: 13.5px; color: #9a8d88; margin-top: 2px">📍 {{ sitter.location }}</div>
 
-                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 20px 0">
+                    <div :style="{ display: 'grid', gridTemplateColumns: isOffer ? 'repeat(3, 1fr)' : 'repeat(2, 1fr)', gap: '12px', margin: '20px 0' }">
                         <div style="background: #faf6f3; border-radius: 16px; padding: 14px; text-align: center">
-                            <div style="font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 18px; color: #5fa07c">{{ sitter.hourly_rate ? '€ ' + sitter.hourly_rate : '—' }}</div>
-                            <div style="font-size: 12px; color: #9a8d88">per uur</div>
+                            <div :style="{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, fontSize: '18px', color: isOffer ? '#5fa07c' : '#c0566b' }">{{ sitter.hourly_rate ? '€ ' + sitter.hourly_rate : '—' }}</div>
+                            <div style="font-size: 12px; color: #9a8d88">{{ isOffer ? 'per uur' : 'budget per uur' }}</div>
                         </div>
-                        <div style="background: #faf6f3; border-radius: 16px; padding: 14px; text-align: center">
+                        <div v-if="isOffer" style="background: #faf6f3; border-radius: 16px; padding: 14px; text-align: center">
                             <div style="font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 18px; color: #473537">{{ sitter.experience_years }} jr</div>
                             <div style="font-size: 12px; color: #9a8d88">ervaring</div>
                         </div>
                         <div style="background: #faf6f3; border-radius: 16px; padding: 14px; text-align: center">
                             <div style="font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 14px; color: #473537; line-height: 1.3; margin-top: 2px">{{ sitter.availability }}</div>
-                            <div style="font-size: 12px; color: #9a8d88">beschikbaar</div>
+                            <div style="font-size: 12px; color: #9a8d88">{{ isOffer ? 'beschikbaar' : 'oppas nodig' }}</div>
                         </div>
                     </div>
 

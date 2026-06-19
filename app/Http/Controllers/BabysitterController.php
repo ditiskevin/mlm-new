@@ -15,8 +15,14 @@ class BabysitterController extends Controller
     {
         $location = $request->query('location');
         $search = $request->query('q');
+        $type = in_array($request->query('type'), array_keys(Babysitter::TYPES), true)
+            ? $request->query('type')
+            : null;
 
         $query = Babysitter::query()->latest();
+        if ($type) {
+            $query->where('type', $type);
+        }
         if ($location) {
             $query->where('location', 'like', "%{$location}%");
         }
@@ -27,7 +33,11 @@ class BabysitterController extends Controller
         return Inertia::render('Babysitter/Index', [
             'sitters' => $query->get()->map(fn (Babysitter $b) => $this->card($b)),
             'locations' => Babysitter::query()->select('location')->distinct()->orderBy('location')->pluck('location'),
-            'filters' => ['location' => $location, 'q' => $search],
+            'filters' => ['location' => $location, 'q' => $search, 'type' => $type],
+            'counts' => [
+                'aanbod' => Babysitter::where('type', 'aanbod')->count(),
+                'gezocht' => Babysitter::where('type', 'gezocht')->count(),
+            ],
         ]);
     }
 
@@ -42,37 +52,43 @@ class BabysitterController extends Controller
         ]);
     }
 
-    public function create(): Response
+    public function create(Request $request): Response
     {
-        return Inertia::render('Babysitter/Create');
+        $type = $request->query('type') === 'gezocht' ? 'gezocht' : 'aanbod';
+
+        return Inertia::render('Babysitter/Create', ['type' => $type]);
     }
 
     public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
+            'type' => ['required', 'in:'.implode(',', array_keys(Babysitter::TYPES))],
             'name' => ['required', 'string', 'max:80'],
             'age' => ['nullable', 'integer', 'min:14', 'max:99'],
             'location' => ['required', 'string', 'max:80'],
             'hourly_rate' => ['nullable', 'numeric', 'min:0', 'max:200'],
+            // Sitter-only fields, ignored for a "gezocht" request.
             'experience_years' => ['nullable', 'integer', 'min:0', 'max:60'],
-            'availability' => ['required', 'string', 'max:120'],
             'has_vog' => ['boolean'],
+            'availability' => ['required', 'string', 'max:120'],
             'bio' => ['required', 'string', 'max:2000'],
         ]);
 
         $user = $request->user();
+        $isOffer = $data['type'] === 'aanbod';
 
         $sitter = Babysitter::create([
             'user_id' => $user->id,
+            'type' => $data['type'],
             'name' => $data['name'],
-            'age' => $data['age'] ?? null,
+            'age' => $isOffer ? ($data['age'] ?? null) : null,
             'location' => $data['location'],
             'hourly_rate' => $data['hourly_rate'] ?? null,
-            'experience_years' => $data['experience_years'] ?? 0,
+            'experience_years' => $isOffer ? ($data['experience_years'] ?? 0) : 0,
             'availability' => $data['availability'],
-            'has_vog' => $data['has_vog'] ?? false,
+            'has_vog' => $isOffer ? ($data['has_vog'] ?? false) : false,
             'bio' => $data['bio'],
-            'avatar_color' => $user->avatar_color ?: '#9AD3AC',
+            'avatar_color' => $user->avatar_color ?: ($isOffer ? '#9AD3AC' : '#F7A8B5'),
         ]);
 
         return redirect()->route('babysitters.show', $sitter);
@@ -90,6 +106,8 @@ class BabysitterController extends Controller
     {
         return [
             'id' => $b->id,
+            'type' => $b->type,
+            'type_label' => Babysitter::TYPES[$b->type] ?? 'Oppas',
             'name' => $b->name,
             'age' => $b->age,
             'location' => $b->location,

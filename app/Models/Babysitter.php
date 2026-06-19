@@ -9,6 +9,12 @@ class Babysitter extends Model
 {
     protected $guarded = [];
 
+    /** aanbod = offering to babysit, gezocht = a family looking for one. */
+    public const TYPES = [
+        'aanbod' => 'Oppas aangeboden',
+        'gezocht' => 'Oppas gezocht',
+    ];
+
     protected $casts = [
         'hourly_rate' => 'decimal:2',
         'experience_years' => 'integer',
