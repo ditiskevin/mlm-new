@@ -3,7 +3,9 @@ import MlmLayout from '@/Layouts/MlmLayout.vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 
-const user = computed(() => usePage().props.auth?.user ?? {});
+const page = usePage();
+const user = computed(() => page.props.auth?.user ?? {});
+const unreadMessages = computed(() => page.props.auth?.unreadMessages ?? 0);
 
 const props = defineProps({
     suggestedAudience: { type: Object, default: null },
@@ -39,6 +41,24 @@ const shortcuts = [
                 </div>
                 <Link :href="route('profile.edit')" style="flex: none; font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 14px; color: #c0566b; background: #fff; border-radius: 999px; padding: 11px 18px; text-decoration: none">Profiel bewerken</Link>
             </div>
+
+            <!-- Berichten -->
+            <Link
+                :href="route('messages.index')"
+                style="display: flex; align-items: center; gap: 16px; margin-top: 20px; border-radius: 22px; padding: 18px 24px; text-decoration: none; border: 1px solid #f2e1e4; background: linear-gradient(150deg, #fdf2f4, #fff)"
+            >
+                <span style="font-size: 34px">💬</span>
+                <div style="flex: 1">
+                    <div style="font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 17px; color: #473537">
+                        Berichten
+                        <span v-if="unreadMessages" style="margin-left: 8px; font-size: 12px; font-weight: 700; color: #fff; background: #f28b82; border-radius: 999px; padding: 2px 9px">{{ unreadMessages }} nieuw</span>
+                    </div>
+                    <div style="font-size: 13.5px; color: #6c5f5b">
+                        {{ unreadMessages ? 'Je hebt ongelezen privéberichten — lees ze nu.' : 'Je privégesprekken met andere leden.' }}
+                    </div>
+                </div>
+                <span style="flex: none; font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 14px; color: #c0566b; background: #fbe9ed; border-radius: 999px; padding: 10px 18px">Naar berichten →</span>
+            </Link>
 
             <Link
                 v-if="suggestedAudience"

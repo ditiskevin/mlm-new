@@ -198,9 +198,9 @@ const navStyle = (active) =>
                             :href="route('messages.index')"
                             :style="navStyle(route().current('messages.*')) + ';position:relative'"
                             title="Berichten"
-                            >💬<span
+                            >💬 Berichten<span
                                 v-if="unreadMessages"
-                                style="position: absolute; top: 0; right: 2px; min-width: 16px; height: 16px; font-size: 10px; font-weight: 700; color: #fff; background: #f28b82; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; padding: 0 4px"
+                                style="margin-left: 2px; min-width: 18px; height: 18px; font-size: 10.5px; font-weight: 700; color: #fff; background: #f28b82; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; padding: 0 5px"
                                 >{{ unreadMessages > 9 ? '9+' : unreadMessages }}</span
                             ></Link
                         >
