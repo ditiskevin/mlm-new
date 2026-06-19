@@ -40,6 +40,7 @@ class CommunityController extends Controller
             ->get()
             ->map(fn (Post $p) => [
                 'id' => $p->id,
+                'author_id' => $p->user_id,
                 'author_name' => $p->author_name,
                 'initial' => mb_substr($p->author_name, 0, 1),
                 'avatar_color' => $p->avatar_color,
@@ -51,6 +52,7 @@ class CommunityController extends Controller
                 'comment_count' => $p->comments->count(),
                 'comments' => $p->comments->map(fn ($c) => [
                     'id' => $c->id,
+                    'author_id' => $c->user_id,
                     'author_name' => $c->author_name,
                     'initial' => mb_substr($c->author_name, 0, 1),
                     'avatar_color' => $c->avatar_color,
@@ -74,6 +76,7 @@ class CommunityController extends Controller
     {
         if ($user) {
             return [
+                'id' => $user->id,
                 'name' => $user->name,
                 'type' => $user->parent_type_label,
                 'role' => $user->role_label ?: 'Lid van de community 💛',

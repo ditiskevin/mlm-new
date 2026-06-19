@@ -31,6 +31,9 @@ Route::middleware('auth')->group(function () {
 });
 Route::get('/blog/{article}', [BlogController::class, 'show'])->name('blog.show');
 
+// Ledenprofielen (publiek)
+Route::get('/leden/{user}', [\App\Http\Controllers\MemberController::class, 'show'])->name('members.show');
+
 // Contact
 Route::get('/contact', [ContactController::class, 'index'])->name('contact');
 Route::post('/contact', [ContactController::class, 'store'])

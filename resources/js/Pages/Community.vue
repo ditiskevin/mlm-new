@@ -81,6 +81,9 @@ const submitPost = () => {
     });
 };
 
+const avatarStyle = (color, size = 46) =>
+    `width:${size}px;height:${size}px;border-radius:50%;flex:none;background:${color};display:flex;align-items:center;justify-content:center;font-family:'Poppins',sans-serif;font-weight:700;color:#fff;font-size:${size > 40 ? 18 : 14}px;text-decoration:none`;
+
 const likeBtnStyle = (isLiked) =>
     "display:flex;align-items:center;gap:7px;background:none;border:none;cursor:pointer;font-weight:600;font-size:14px;font-family:'Quicksand',sans-serif;color:" +
     (isLiked ? '#F28B82' : '#9a8d88');
@@ -111,12 +114,19 @@ const likeBtnStyle = (isLiked) =>
                                     <div style="font-size: 11px; color: #9a8d88">{{ stat.label }}</div>
                                 </div>
                             </div>
-                            <Link
-                                v-if="profile.editable"
-                                :href="route('profile.edit')"
-                                style="display: block; text-align: center; margin-top: 14px; font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 13px; color: #c0566b; background: #fbe9ed; border-radius: 999px; padding: 9px 14px; text-decoration: none"
-                                >Profiel bewerken</Link
-                            >
+                            <div v-if="profile.editable" style="display: flex; gap: 8px; margin-top: 14px">
+                                <Link
+                                    v-if="profile.id"
+                                    :href="route('members.show', profile.id)"
+                                    style="flex: 1; text-align: center; font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 13px; color: #5d514d; background: #faf4f1; border: 1px solid #f0e6e2; border-radius: 999px; padding: 9px 14px; text-decoration: none"
+                                    >Mijn profiel</Link
+                                >
+                                <Link
+                                    :href="route('profile.edit')"
+                                    style="flex: 1; text-align: center; font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 13px; color: #c0566b; background: #fbe9ed; border-radius: 999px; padding: 9px 14px; text-decoration: none"
+                                    >Bewerken</Link
+                                >
+                            </div>
                         </div>
                     </div>
                     <div style="min-width: 0; background: #fff; border: 1px solid #f2e7e2; border-radius: 24px; padding: 20px; box-shadow: 0 10px 26px rgba(180, 150, 150, 0.09)">
@@ -158,8 +168,13 @@ const likeBtnStyle = (isLiked) =>
 
                     <div v-for="p in posts" :key="p.id" style="background: #fff; border: 1px solid #f2e7e2; border-radius: 22px; padding: 20px 22px; box-shadow: 0 8px 20px rgba(180, 150, 150, 0.07)">
                         <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 13px">
-                            <span :style="{ width: '46px', height: '46px', borderRadius: '50%', flex: 'none', background: p.avatar_color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Poppins, sans-serif', fontWeight: 700, color: '#fff', fontSize: '18px' }">{{ p.initial }}</span>
-                            <div style="flex: 1"><div style="font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 15px; color: #473537">{{ p.author_name }}</div><div style="font-size: 12.5px; color: #9a8d88">{{ p.meta }}</div></div>
+                            <Link v-if="p.author_id" :href="route('members.show', p.author_id)" :style="avatarStyle(p.avatar_color)">{{ p.initial }}</Link>
+                            <span v-else :style="avatarStyle(p.avatar_color)">{{ p.initial }}</span>
+                            <div style="flex: 1">
+                                <Link v-if="p.author_id" :href="route('members.show', p.author_id)" style="font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 15px; color: #473537; text-decoration: none">{{ p.author_name }}</Link>
+                                <div v-else style="font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 15px; color: #473537">{{ p.author_name }}</div>
+                                <div style="font-size: 12.5px; color: #9a8d88">{{ p.meta }}</div>
+                            </div>
                             <span v-if="p.tag" style="font-size: 11.5px; font-weight: 600; color: #c58a2e; background: #fbefd8; border-radius: 999px; padding: 5px 12px">{{ p.tag }}</span>
                         </div>
                         <p style="margin: 0 0 14px; font-size: 15px; line-height: 1.65; color: #5d514d">{{ p.body }}</p>
@@ -178,10 +193,12 @@ const likeBtnStyle = (isLiked) =>
                         <!-- comments -->
                         <div v-if="openComments.has(p.id) || p.comment_count" v-show="openComments.has(p.id)" style="margin-top: 14px; border-top: 1px solid #f4ece8; padding-top: 14px; display: grid; gap: 12px">
                             <div v-for="c in p.comments" :key="c.id" style="display: flex; gap: 10px; align-items: flex-start">
-                                <span :style="{ width: '34px', height: '34px', borderRadius: '50%', flex: 'none', background: c.avatar_color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Poppins, sans-serif', fontWeight: 700, color: '#fff', fontSize: '14px' }">{{ c.initial }}</span>
+                                <Link v-if="c.author_id" :href="route('members.show', c.author_id)" :style="avatarStyle(c.avatar_color, 34)">{{ c.initial }}</Link>
+                                <span v-else :style="avatarStyle(c.avatar_color, 34)">{{ c.initial }}</span>
                                 <div style="flex: 1; background: #faf6f3; border: 1px solid #f1e7e2; border-radius: 16px; padding: 10px 14px">
                                     <div style="display: flex; align-items: baseline; gap: 8px">
-                                        <span style="font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 13.5px; color: #473537">{{ c.author_name }}</span>
+                                        <Link v-if="c.author_id" :href="route('members.show', c.author_id)" style="font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 13.5px; color: #473537; text-decoration: none">{{ c.author_name }}</Link>
+                                        <span v-else style="font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 13.5px; color: #473537">{{ c.author_name }}</span>
                                         <span style="font-size: 11.5px; color: #9a8d88">{{ c.meta }}</span>
                                         <span style="margin-left: auto"><ReportButton type="comment" :id="c.id" variant="icon" /></span>
                                     </div>

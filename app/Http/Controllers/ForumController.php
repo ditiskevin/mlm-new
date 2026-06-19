@@ -72,6 +72,7 @@ class ForumController extends Controller
                 'slug' => $topic->slug,
                 'title' => $topic->title,
                 'body' => $topic->body,
+                'author_id' => $topic->user_id,
                 'author_name' => $topic->author_name,
                 'avatar_color' => $topic->avatar_color,
                 'initial' => Str::upper(Str::substr($topic->author_name, 0, 1)),
@@ -82,6 +83,7 @@ class ForumController extends Controller
             ],
             'replies' => $topic->replies()->oldest()->get()->map(fn ($r) => [
                 'id' => $r->id,
+                'author_id' => $r->user_id,
                 'author_name' => $r->author_name,
                 'avatar_color' => $r->avatar_color,
                 'initial' => Str::upper(Str::substr($r->author_name, 0, 1)),

@@ -26,6 +26,9 @@ const removeTopic = () => {
         router.delete(route('forum.topics.destroy', props.topic.slug));
     }
 };
+
+const avatarStyle = (color, size = 46) =>
+    `width:${size}px;height:${size}px;border-radius:50%;flex:none;background:${color};display:flex;align-items:center;justify-content:center;font-family:'Poppins',sans-serif;font-weight:700;color:#fff;font-size:${size > 40 ? 18 : 16}px;text-decoration:none`;
 </script>
 
 <template>
@@ -41,8 +44,13 @@ const removeTopic = () => {
             <!-- opening post -->
             <div style="background: #fff; border: 1px solid #f2e7e2; border-radius: 22px; padding: 22px; box-shadow: 0 8px 20px rgba(180, 150, 150, 0.07)">
                 <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 13px">
-                    <span :style="{ width: '46px', height: '46px', borderRadius: '50%', flex: 'none', background: topic.avatar_color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Poppins, sans-serif', fontWeight: 700, color: '#fff', fontSize: '18px' }">{{ topic.initial }}</span>
-                    <div style="flex: 1"><div style="font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 15px; color: #473537">{{ topic.author_name }}</div><div style="font-size: 12.5px; color: #9a8d88">startte dit onderwerp · {{ topic.created }}</div></div>
+                    <Link v-if="topic.author_id" :href="route('members.show', topic.author_id)" :style="avatarStyle(topic.avatar_color)">{{ topic.initial }}</Link>
+                    <span v-else :style="avatarStyle(topic.avatar_color)">{{ topic.initial }}</span>
+                    <div style="flex: 1">
+                        <Link v-if="topic.author_id" :href="route('members.show', topic.author_id)" style="font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 15px; color: #473537; text-decoration: none">{{ topic.author_name }}</Link>
+                        <div v-else style="font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 15px; color: #473537">{{ topic.author_name }}</div>
+                        <div style="font-size: 12.5px; color: #9a8d88">startte dit onderwerp · {{ topic.created }}</div>
+                    </div>
                     <ReportButton type="forum_topic" :id="topic.id" />
                     <button v-if="topic.can_delete" @click="removeTopic" style="font-family: 'Quicksand', sans-serif; font-weight: 600; font-size: 12.5px; color: #b4574e; background: none; border: none; cursor: pointer">Verwijderen</button>
                 </div>
@@ -53,10 +61,12 @@ const removeTopic = () => {
             <h2 style="font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 17px; color: #473537; margin: 26px 0 14px">{{ replies.length }} {{ replies.length === 1 ? 'reactie' : 'reacties' }}</h2>
             <div style="display: grid; gap: 12px">
                 <div v-for="r in replies" :key="r.id" style="display: flex; gap: 12px; align-items: flex-start">
-                    <span :style="{ width: '42px', height: '42px', borderRadius: '50%', flex: 'none', background: r.avatar_color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Poppins, sans-serif', fontWeight: 700, color: '#fff', fontSize: '16px' }">{{ r.initial }}</span>
+                    <Link v-if="r.author_id" :href="route('members.show', r.author_id)" :style="avatarStyle(r.avatar_color, 42)">{{ r.initial }}</Link>
+                    <span v-else :style="avatarStyle(r.avatar_color, 42)">{{ r.initial }}</span>
                     <div style="flex: 1; background: #fff; border: 1px solid #f2e7e2; border-radius: 18px; padding: 14px 18px; box-shadow: 0 6px 16px rgba(180, 150, 150, 0.05)">
                         <div style="display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px">
-                            <span style="font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 14px; color: #473537">{{ r.author_name }}</span>
+                            <Link v-if="r.author_id" :href="route('members.show', r.author_id)" style="font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 14px; color: #473537; text-decoration: none">{{ r.author_name }}</Link>
+                            <span v-else style="font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 14px; color: #473537">{{ r.author_name }}</span>
                             <span style="font-size: 11.5px; color: #9a8d88">{{ r.created }}</span>
                             <span style="margin-left: auto"><ReportButton type="forum_reply" :id="r.id" variant="icon" /></span>
                         </div>
