@@ -168,6 +168,133 @@ class AdminController extends Controller
         return back()->with('success', 'Verhaal goedgekeurd en gepubliceerd. 💛');
     }
 
+    public function articlesIndex(): Response
+    {
+        return Inertia::render('Admin/Articles/Index', [
+            'articles' => Article::latest('id')->get()->map(fn (Article $a) => [
+                'slug' => $a->slug,
+                'title' => $a->title,
+                'category' => $a->category,
+                'emoji' => $a->emoji,
+                'author' => $a->author_name,
+                'status' => $a->status,
+                'published' => $a->published_at?->translatedFormat('j M Y'),
+            ]),
+        ]);
+    }
+
+    public function createArticle(): Response
+    {
+        return Inertia::render('Admin/Articles/Form', ['article' => null]);
+    }
+
+    public function editArticle(Article $article): Response
+    {
+        return Inertia::render('Admin/Articles/Form', [
+            'article' => [
+                'slug' => $article->slug,
+                'title' => $article->title,
+                'category' => $article->category,
+                'author_name' => $article->author_name,
+                'emoji' => $article->emoji,
+                'color_from' => $article->color_from,
+                'color_to' => $article->color_to,
+                'reading_minutes' => $article->reading_minutes,
+                'excerpt' => $article->excerpt,
+                'body' => $article->body,
+                'published' => $article->status === 'published' && $article->published_at !== null,
+            ],
+        ]);
+    }
+
+    public function storeArticle(Request $request): RedirectResponse
+    {
+        $data = $this->validateArticle($request);
+
+        Article::create([
+            'title' => $data['title'],
+            'slug' => $this->uniqueArticleSlug($data['title']),
+            'category' => $data['category'],
+            'author_name' => $data['author_name'] ?: 'Stephanie van der Kooij',
+            'emoji' => $data['emoji'] ?: '💛',
+            'color_from' => $data['color_from'] ?: '#FCE7EB',
+            'color_to' => $data['color_to'] ?: '#EAF5EE',
+            'reading_minutes' => $data['reading_minutes'] ?: $this->estimateMinutes($data['body']),
+            'excerpt' => $data['excerpt'],
+            'body' => $data['body'],
+            'status' => $data['published'] ? 'published' : 'pending',
+            'published_at' => $data['published'] ? now() : null,
+        ]);
+
+        return redirect()->route('admin.articles.index')->with('success', 'Artikel aangemaakt. 💛');
+    }
+
+    public function updateArticle(Request $request, Article $article): RedirectResponse
+    {
+        $data = $this->validateArticle($request);
+
+        $article->update([
+            'title' => $data['title'],
+            'category' => $data['category'],
+            'author_name' => $data['author_name'] ?: $article->author_name,
+            'emoji' => $data['emoji'] ?: '💛',
+            'color_from' => $data['color_from'] ?: '#FCE7EB',
+            'color_to' => $data['color_to'] ?: '#EAF5EE',
+            'reading_minutes' => $data['reading_minutes'] ?: $this->estimateMinutes($data['body']),
+            'excerpt' => $data['excerpt'],
+            'body' => $data['body'],
+            'status' => $data['published'] ? 'published' : 'pending',
+            'published_at' => $data['published'] ? ($article->published_at ?? now()) : null,
+        ]);
+
+        return redirect()->route('admin.articles.index')->with('success', 'Artikel bijgewerkt. 💛');
+    }
+
+    public function destroyUser(User $user): RedirectResponse
+    {
+        // Never let an admin delete their own account from here.
+        if ($user->id === auth()->id()) {
+            return back()->with('error', 'Je kunt je eigen account hier niet verwijderen.');
+        }
+
+        $user->delete();
+
+        return back()->with('success', 'Lid verwijderd.');
+    }
+
+    private function validateArticle(Request $request): array
+    {
+        return $request->validate([
+            'title' => ['required', 'string', 'max:140'],
+            'category' => ['required', 'string', 'max:60'],
+            'author_name' => ['nullable', 'string', 'max:120'],
+            'emoji' => ['nullable', 'string', 'max:8'],
+            'color_from' => ['nullable', 'string', 'regex:/^#([0-9A-Fa-f]{6})$/'],
+            'color_to' => ['nullable', 'string', 'regex:/^#([0-9A-Fa-f]{6})$/'],
+            'reading_minutes' => ['nullable', 'integer', 'min:1', 'max:120'],
+            'excerpt' => ['required', 'string', 'min:20', 'max:300'],
+            'body' => ['required', 'string', 'min:100', 'max:20000'],
+            'published' => ['boolean'],
+        ]);
+    }
+
+    private function estimateMinutes(string $body): int
+    {
+        return max(1, (int) round(str_word_count(strip_tags($body)) / 200));
+    }
+
+    private function uniqueArticleSlug(string $title): string
+    {
+        $base = Str::slug($title) ?: 'artikel';
+        $slug = $base;
+        $i = 1;
+        while (Article::where('slug', $slug)->exists()) {
+            $slug = $base.'-'.(++$i);
+        }
+
+        return $slug;
+    }
+
     public function toggleAdmin(User $user): RedirectResponse
     {
         // Don't let an admin remove their own admin rights (avoid lock-out).

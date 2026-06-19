@@ -94,6 +94,15 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::delete('/articles/{article}', [AdminController::class, 'destroyArticle'])->name('articles.destroy');
     Route::get('/blog-inzendingen', [AdminController::class, 'pendingArticles'])->name('articles.pending');
     Route::patch('/articles/{article}/approve', [AdminController::class, 'approveArticle'])->name('articles.approve');
+
+    // Volledig blogbeheer (artikelen aanmaken / bewerken)
+    Route::get('/blog', [AdminController::class, 'articlesIndex'])->name('articles.index');
+    Route::get('/blog/nieuw', [AdminController::class, 'createArticle'])->name('articles.create');
+    Route::post('/blog', [AdminController::class, 'storeArticle'])->name('articles.store');
+    Route::get('/blog/{article}/bewerken', [AdminController::class, 'editArticle'])->name('articles.edit');
+    Route::patch('/blog/{article}', [AdminController::class, 'updateArticle'])->name('articles.update');
+
+    Route::delete('/users/{user}', [AdminController::class, 'destroyUser'])->name('users.destroy');
     Route::patch('/users/{user}/toggle-admin', [AdminController::class, 'toggleAdmin'])->name('users.toggle-admin');
 
     // Contactberichten

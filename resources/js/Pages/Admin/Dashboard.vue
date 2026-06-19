@@ -39,6 +39,12 @@ const remove = (sectionRoute, id) => {
 
 const toggleAdmin = (id) => router.patch(route('admin.users.toggle-admin', id), {}, { preserveScroll: true });
 
+const removeUser = (u) => {
+    if (confirm(`Lid "${u.name}" definitief verwijderen? Dit kan niet ongedaan worden gemaakt.`)) {
+        router.delete(route('admin.users.destroy', u.id), { preserveScroll: true });
+    }
+};
+
 const tabStyle = (a) =>
     "flex:none;font-family:'Quicksand',sans-serif;font-weight:600;font-size:13.5px;border-radius:999px;padding:9px 15px;cursor:pointer;border:1.5px solid " +
     (a ? '#F28B82' : '#EFE3E4') + ';background:' + (a ? '#FCE7EB' : '#fff') + ';color:' + (a ? '#C0566B' : '#9a8d88');
@@ -59,6 +65,7 @@ const tabStyle = (a) =>
                 <Link :href="route('admin.articles.pending')" style="font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 13.5px; color: #c0566b; background: #fce7eb; border-radius: 999px; padding: 9px 16px; text-decoration: none">
                     📝 Blog-inzendingen<span v-if="pendingArticleCount" style="margin-left: 7px; font-size: 11px; color: #fff; background: #f28b82; border-radius: 999px; padding: 1px 8px">{{ pendingArticleCount }}</span>
                 </Link>
+                <Link :href="route('admin.articles.index')" style="font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 13.5px; color: #c0566b; background: #fce7eb; border-radius: 999px; padding: 9px 16px; text-decoration: none">📚 Blogbeheer</Link>
             </div>
 
             <!-- stats -->
@@ -105,7 +112,10 @@ const tabStyle = (a) =>
                             <div style="font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 14.5px; color: #473537">{{ u.name }}<span v-if="u.is_admin" style="margin-left: 8px; font-size: 11px; font-weight: 600; color: #c0566b; background: #fce7eb; border-radius: 999px; padding: 3px 9px">beheerder</span></div>
                             <div style="font-size: 13px; color: #8a7d78">{{ u.email }}</div>
                         </div>
-                        <button v-if="!u.is_self" @click="toggleAdmin(u.id)" style="flex: none; font-family: 'Quicksand', sans-serif; font-weight: 600; font-size: 12.5px; color: #5d514d; background: #faf4f1; border: 1px solid #f0e6e2; border-radius: 999px; padding: 8px 14px; cursor: pointer">{{ u.is_admin ? 'Beheer intrekken' : 'Maak beheerder' }}</button>
+                        <template v-if="!u.is_self">
+                            <button @click="toggleAdmin(u.id)" style="flex: none; font-family: 'Quicksand', sans-serif; font-weight: 600; font-size: 12.5px; color: #5d514d; background: #faf4f1; border: 1px solid #f0e6e2; border-radius: 999px; padding: 8px 14px; cursor: pointer">{{ u.is_admin ? 'Beheer intrekken' : 'Maak beheerder' }}</button>
+                            <button @click="removeUser(u)" style="flex: none; font-family: 'Quicksand', sans-serif; font-weight: 600; font-size: 12.5px; color: #b4574e; background: #fdf0ef; border: 1px solid #f6cfca; border-radius: 999px; padding: 8px 14px; cursor: pointer">Verwijderen</button>
+                        </template>
                         <span v-else style="flex: none; font-size: 12px; color: #b5a8a3">jij</span>
                     </div>
                 </div>
