@@ -68,6 +68,7 @@ class ForumController extends Controller
 
         return Inertia::render('Forum/Topic', [
             'topic' => [
+                'id' => $topic->id,
                 'slug' => $topic->slug,
                 'title' => $topic->title,
                 'body' => $topic->body,

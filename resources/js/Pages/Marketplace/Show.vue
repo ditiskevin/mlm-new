@@ -1,5 +1,6 @@
 <script setup>
 import MlmLayout from '@/Layouts/MlmLayout.vue';
+import ReportButton from '@/Components/ReportButton.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 
 const props = defineProps({
@@ -44,7 +45,10 @@ const remove = () => {
                         <Link :href="route('community')" style="font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 14px; color: #fff; background: linear-gradient(135deg, #f7a8b5, #f28b82); border: none; border-radius: 999px; padding: 11px 20px; text-decoration: none">Stuur bericht</Link>
                     </div>
 
-                    <button v-if="listing.canDelete" @click="remove" style="margin-top: 16px; font-family: 'Quicksand', sans-serif; font-weight: 600; font-size: 13px; color: #b4574e; background: none; border: none; cursor: pointer; padding: 0">Advertentie verwijderen</button>
+                    <div style="margin-top: 16px; display: flex; gap: 16px; align-items: center">
+                        <button v-if="listing.canDelete" @click="remove" style="font-family: 'Quicksand', sans-serif; font-weight: 600; font-size: 13px; color: #b4574e; background: none; border: none; cursor: pointer; padding: 0">Advertentie verwijderen</button>
+                        <ReportButton v-if="!listing.canDelete" type="listing" :id="listing.id" label="Advertentie melden" />
+                    </div>
                 </div>
             </div>
         </section>

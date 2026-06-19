@@ -1,5 +1,6 @@
 <script setup>
 import MlmLayout from '@/Layouts/MlmLayout.vue';
+import ReportButton from '@/Components/ReportButton.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 
 const props = defineProps({
@@ -49,6 +50,7 @@ const remove = () => {
                     <div style="display: flex; gap: 12px; align-items: center; border-top: 1px solid #f4ece8; padding-top: 18px">
                         <Link :href="route('community')" style="font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 14px; color: #fff; background: linear-gradient(135deg, #8fd0a6, #5fb07f); border: none; border-radius: 999px; padding: 12px 22px; text-decoration: none">Neem contact op</Link>
                         <button v-if="sitter.canDelete" @click="remove" style="font-family: 'Quicksand', sans-serif; font-weight: 600; font-size: 13px; color: #b4574e; background: none; border: none; cursor: pointer">Profiel verwijderen</button>
+                        <span v-if="!sitter.canDelete" style="margin-left: auto"><ReportButton type="babysitter" :id="sitter.id" label="Profiel melden" /></span>
                     </div>
                 </div>
             </div>

@@ -13,6 +13,7 @@ use App\Models\ForumReply;
 use App\Models\ForumTopic;
 use App\Models\Listing;
 use App\Models\Post;
+use App\Models\Report;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -27,6 +28,7 @@ class AdminController extends Controller
         return Inertia::render('Admin/Dashboard', [
             'openContactCount' => ContactMessage::whereNull('handled_at')->count(),
             'pendingArticleCount' => Article::where('status', 'pending')->count(),
+            'openReportCount' => Report::where('status', 'open')->count(),
             'stats' => [
                 ['label' => 'Leden', 'value' => User::count(), 'emoji' => '👥'],
                 ['label' => 'Berichten', 'value' => Post::count(), 'emoji' => '💬'],
@@ -304,6 +306,107 @@ class AdminController extends Controller
         }
 
         return back();
+    }
+
+    // ---- Meldingen (reports) ----
+
+    public function reports(Request $request): Response
+    {
+        $status = $request->query('status', 'open');
+
+        $query = Report::with(['reportable', 'reporter:id,name'])->latest();
+        if (in_array($status, ['open', 'reviewed', 'dismissed'], true)) {
+            $query->where('status', $status);
+        }
+
+        return Inertia::render('Admin/Reports/Index', [
+            'activeStatus' => $status,
+            'counts' => [
+                'open' => Report::where('status', 'open')->count(),
+                'reviewed' => Report::where('status', 'reviewed')->count(),
+                'dismissed' => Report::where('status', 'dismissed')->count(),
+            ],
+            'reasons' => Report::REASONS,
+            'reports' => $query->get()->map(fn (Report $r) => [
+                'id' => $r->id,
+                'reason' => Report::REASONS[$r->reason] ?? $r->reason,
+                'details' => $r->details,
+                'status' => $r->status,
+                'reporter' => $r->reporter?->name ?? 'Onbekend',
+                'when' => $r->created_at->diffForHumans(),
+                'target' => $this->summarizeReportable($r),
+            ]),
+        ]);
+    }
+
+    public function updateReportStatus(Request $request, Report $report): RedirectResponse
+    {
+        $data = $request->validate([
+            'status' => ['required', 'in:open,reviewed,dismissed'],
+        ]);
+
+        $report->update([
+            'status' => $data['status'],
+            'handled_at' => $data['status'] === 'open' ? null : now(),
+        ]);
+
+        return back();
+    }
+
+    public function destroyReport(Report $report): RedirectResponse
+    {
+        $report->delete();
+
+        return back();
+    }
+
+    /** Delete the reported item itself and mark the report (and siblings) reviewed. */
+    public function destroyReportedContent(Report $report): RedirectResponse
+    {
+        $reportable = $report->reportable;
+
+        if (! $reportable) {
+            return back()->with('error', 'De gemelde inhoud bestaat niet meer.');
+        }
+
+        if ($reportable instanceof User && $reportable->id === auth()->id()) {
+            return back()->with('error', 'Je kunt je eigen account hier niet verwijderen.');
+        }
+
+        // Resolve every open report pointing at the same item.
+        Report::where('reportable_type', $report->reportable_type)
+            ->where('reportable_id', $report->reportable_id)
+            ->update(['status' => 'reviewed', 'handled_at' => now()]);
+
+        $reportable->delete();
+
+        return back()->with('success', 'Gemelde inhoud verwijderd. 💛');
+    }
+
+    /**
+     * Human-readable summary of whatever was reported, with a link when possible.
+     *
+     * @return array{label: string, title: string, excerpt: ?string, url: ?string}
+     */
+    private function summarizeReportable(Report $report): array
+    {
+        $m = $report->reportable;
+
+        if (! $m) {
+            return ['label' => 'Verwijderd', 'title' => 'Inhoud bestaat niet meer', 'excerpt' => null, 'url' => null];
+        }
+
+        return match (true) {
+            $m instanceof Post => ['label' => 'Bericht', 'title' => $m->author_name, 'excerpt' => Str::limit($m->body, 160), 'url' => route('community')],
+            $m instanceof Comment => ['label' => 'Reactie', 'title' => $m->author_name, 'excerpt' => Str::limit($m->body, 160), 'url' => route('community')],
+            $m instanceof ForumTopic => ['label' => 'Forumonderwerp', 'title' => $m->title, 'excerpt' => Str::limit($m->body ?? '', 160), 'url' => route('forum.topic', $m->slug)],
+            $m instanceof ForumReply => ['label' => 'Forumreactie', 'title' => $m->author_name, 'excerpt' => Str::limit($m->body, 160), 'url' => $m->topic ? route('forum.topic', $m->topic->slug) : null],
+            $m instanceof Listing => ['label' => 'Advertentie', 'title' => $m->title, 'excerpt' => Str::limit($m->description, 160), 'url' => route('marketplace.show', $m->slug)],
+            $m instanceof Babysitter => ['label' => 'Oppasprofiel', 'title' => $m->name, 'excerpt' => Str::limit($m->bio ?? '', 160), 'url' => route('babysitters.show', $m->id)],
+            $m instanceof Article => ['label' => 'Blogartikel', 'title' => $m->title, 'excerpt' => $m->excerpt, 'url' => route('blog.show', $m->slug)],
+            $m instanceof User => ['label' => 'Profiel', 'title' => $m->name, 'excerpt' => Str::limit($m->bio ?? '', 160), 'url' => null],
+            default => ['label' => 'Onbekend', 'title' => '#'.$m->getKey(), 'excerpt' => null, 'url' => null],
+        };
     }
 
     // ---- Contactberichten ----

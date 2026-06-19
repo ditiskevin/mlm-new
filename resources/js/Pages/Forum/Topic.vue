@@ -1,5 +1,6 @@
 <script setup>
 import MlmLayout from '@/Layouts/MlmLayout.vue';
+import ReportButton from '@/Components/ReportButton.vue';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 
@@ -42,6 +43,7 @@ const removeTopic = () => {
                 <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 13px">
                     <span :style="{ width: '46px', height: '46px', borderRadius: '50%', flex: 'none', background: topic.avatar_color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Poppins, sans-serif', fontWeight: 700, color: '#fff', fontSize: '18px' }">{{ topic.initial }}</span>
                     <div style="flex: 1"><div style="font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 15px; color: #473537">{{ topic.author_name }}</div><div style="font-size: 12.5px; color: #9a8d88">startte dit onderwerp · {{ topic.created }}</div></div>
+                    <ReportButton type="forum_topic" :id="topic.id" />
                     <button v-if="topic.can_delete" @click="removeTopic" style="font-family: 'Quicksand', sans-serif; font-weight: 600; font-size: 12.5px; color: #b4574e; background: none; border: none; cursor: pointer">Verwijderen</button>
                 </div>
                 <p style="margin: 0; font-size: 15.5px; line-height: 1.7; color: #5d514d; white-space: pre-line">{{ topic.body }}</p>
@@ -56,6 +58,7 @@ const removeTopic = () => {
                         <div style="display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px">
                             <span style="font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 14px; color: #473537">{{ r.author_name }}</span>
                             <span style="font-size: 11.5px; color: #9a8d88">{{ r.created }}</span>
+                            <span style="margin-left: auto"><ReportButton type="forum_reply" :id="r.id" variant="icon" /></span>
                         </div>
                         <p style="margin: 0; font-size: 15px; line-height: 1.65; color: #5d514d; white-space: pre-line">{{ r.body }}</p>
                     </div>

@@ -1,5 +1,6 @@
 <script setup>
 import MlmLayout from '@/Layouts/MlmLayout.vue';
+import ReportButton from '@/Components/ReportButton.vue';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import { computed, reactive } from 'vue';
 
@@ -155,6 +156,7 @@ const likeBtnStyle = (isLiked) =>
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M21 12a8 8 0 0 1-8 8H7l-4 3V12a8 8 0 0 1 8-8h2a8 8 0 0 1 8 8Z" stroke="#9a8d88" stroke-width="1.8" /></svg>
                                 Reageer<span v-if="p.comment_count"> · {{ p.comment_count }}</span>
                             </button>
+                            <span style="margin-left: auto"><ReportButton type="post" :id="p.id" /></span>
                         </div>
 
                         <!-- comments -->
@@ -165,6 +167,7 @@ const likeBtnStyle = (isLiked) =>
                                     <div style="display: flex; align-items: baseline; gap: 8px">
                                         <span style="font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 13.5px; color: #473537">{{ c.author_name }}</span>
                                         <span style="font-size: 11.5px; color: #9a8d88">{{ c.meta }}</span>
+                                        <span style="margin-left: auto"><ReportButton type="comment" :id="c.id" variant="icon" /></span>
                                     </div>
                                     <p style="margin: 3px 0 0; font-size: 14px; line-height: 1.55; color: #5d514d">{{ c.body }}</p>
                                 </div>

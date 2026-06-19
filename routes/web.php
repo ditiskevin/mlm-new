@@ -80,6 +80,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/community/posts/{post}/comments', [CommunityController::class, 'storeComment'])->name('community.posts.comments.store');
     Route::post('/community/posts/{post}/like', [CommunityController::class, 'toggleLike'])->name('community.posts.like');
     Route::post('/community/groups/{group}/follow', [CommunityController::class, 'toggleFollow'])->name('community.groups.follow');
+
+    // Melden (rapporteren) van inhoud of profielen
+    Route::post('/meldingen', [\App\Http\Controllers\ReportController::class, 'store'])
+        ->middleware('throttle:20,1')->name('reports.store');
 });
 
 // Admin moderation area
@@ -104,6 +108,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     Route::delete('/users/{user}', [AdminController::class, 'destroyUser'])->name('users.destroy');
     Route::patch('/users/{user}/toggle-admin', [AdminController::class, 'toggleAdmin'])->name('users.toggle-admin');
+
+    // Meldingen (reports)
+    Route::get('/meldingen', [AdminController::class, 'reports'])->name('reports.index');
+    Route::patch('/meldingen/{report}/status', [AdminController::class, 'updateReportStatus'])->name('reports.status');
+    Route::delete('/meldingen/{report}', [AdminController::class, 'destroyReport'])->name('reports.destroy');
+    Route::delete('/meldingen/{report}/inhoud', [AdminController::class, 'destroyReportedContent'])->name('reports.content.destroy');
 
     // Contactberichten
     Route::get('/contact', [AdminController::class, 'contact'])->name('contact.index');
