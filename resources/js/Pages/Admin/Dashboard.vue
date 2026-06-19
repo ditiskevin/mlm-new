@@ -6,6 +6,7 @@ import { ref } from 'vue';
 const props = defineProps({
     stats: { type: Array, required: true },
     openContactCount: { type: Number, default: 0 },
+    pendingArticleCount: { type: Number, default: 0 },
     posts: Array,
     comments: Array,
     topics: Array,
@@ -54,6 +55,9 @@ const tabStyle = (a) =>
                 <Link :href="route('admin.audiences.index')" style="font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 13.5px; color: #c0566b; background: #fce7eb; border-radius: 999px; padding: 9px 16px; text-decoration: none">🎯 Doelgroepen &amp; "Ik ben…" beheren</Link>
                 <Link :href="route('admin.contact.index')" style="font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 13.5px; color: #c0566b; background: #fce7eb; border-radius: 999px; padding: 9px 16px; text-decoration: none">
                     ✉️ Contactberichten<span v-if="openContactCount" style="margin-left: 7px; font-size: 11px; color: #fff; background: #f28b82; border-radius: 999px; padding: 1px 8px">{{ openContactCount }}</span>
+                </Link>
+                <Link :href="route('admin.articles.pending')" style="font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 13.5px; color: #c0566b; background: #fce7eb; border-radius: 999px; padding: 9px 16px; text-decoration: none">
+                    📝 Blog-inzendingen<span v-if="pendingArticleCount" style="margin-left: 7px; font-size: 11px; color: #fff; background: #f28b82; border-radius: 999px; padding: 1px 8px">{{ pendingArticleCount }}</span>
                 </Link>
             </div>
 

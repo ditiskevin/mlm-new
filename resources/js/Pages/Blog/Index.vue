@@ -6,7 +6,11 @@ defineProps({
     articles: { type: Array, required: true },
     categories: { type: Array, required: true },
     activeCategory: { type: String, default: null },
+    canWrite: { type: Boolean, default: false },
+    mySubmissions: { type: Array, default: () => [] },
 });
+
+const statusLabel = { pending: 'In afwachting van goedkeuring', rejected: 'Niet geplaatst' };
 
 const pillStyle = (active) =>
     "flex:none;font-family:'Quicksand',sans-serif;font-weight:600;font-size:13.5px;border-radius:999px;padding:9px 16px;cursor:pointer;text-decoration:none;border:1.5px solid " +
@@ -27,6 +31,35 @@ const pillStyle = (active) =>
                 Ervaringen, tips en verhalen over zwangerschap, het eerste jaar en bijzondere uitdagingen zoals Caprin1, schisis, autisme, NLD en ADHD -
                 van ouder tot ouder.
             </p>
+
+            <!-- Write CTA -->
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; background: linear-gradient(160deg, #fdf2f4, #f3f9f5); border: 1px solid #f2e1e4; border-radius: 22px; padding: 18px 24px; margin-bottom: 22px">
+                <div>
+                    <div style="font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 17px; color: #473537">Heb jij een verhaal om te delen? ✍️</div>
+                    <p style="margin: 3px 0 0; font-size: 14px; color: #7a6c67">Vertel jouw ervaring en inspireer andere ouders. Verhalen worden voor plaatsing kort bekeken.</p>
+                </div>
+                <Link
+                    v-if="canWrite"
+                    :href="route('blog.create')"
+                    style="flex: none; font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 14.5px; color: #fff; background: linear-gradient(135deg, #f7a8b5, #f28b82); border-radius: 999px; padding: 12px 24px; text-decoration: none; box-shadow: 0 8px 18px rgba(242, 139, 130, 0.3)"
+                    >Schrijf jouw verhaal</Link
+                >
+                <Link
+                    v-else
+                    :href="route('login')"
+                    style="flex: none; font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 14.5px; color: #c0566b; background: #fce7eb; border-radius: 999px; padding: 12px 24px; text-decoration: none"
+                    >Log in om te schrijven</Link
+                >
+            </div>
+
+            <!-- My pending submissions -->
+            <div v-if="mySubmissions.length" style="background: #fff; border: 1px dashed #f0d6dc; border-radius: 18px; padding: 16px 20px; margin-bottom: 22px">
+                <div style="font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 14px; color: #473537; margin-bottom: 8px">Jouw inzendingen</div>
+                <div v-for="s in mySubmissions" :key="s.slug" style="display: flex; align-items: center; gap: 10px; font-size: 13.5px; color: #7a6c67; padding: 4px 0">
+                    <span style="font-weight: 600; color: #473537">{{ s.title }}</span>
+                    <span :style="{ fontSize: '11.5px', fontWeight: 600, borderRadius: '999px', padding: '2px 9px', color: s.status === 'pending' ? '#b07b1f' : '#9a8d88', background: s.status === 'pending' ? '#fbeed3' : '#f3ece9' }">{{ statusLabel[s.status] ?? s.status }}</span>
+                </div>
+            </div>
 
             <div class="mlm-scroll" style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 22px">
                 <Link :href="route('blog.index')" :style="pillStyle(!activeCategory)">Alle</Link>

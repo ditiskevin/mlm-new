@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Article extends Model
 {
@@ -16,6 +18,17 @@ class Article extends Model
     public function getRouteKeyName(): string
     {
         return 'slug';
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    /** Articles that are live on the site. */
+    public function scopePublished(Builder $query): Builder
+    {
+        return $query->where('status', 'published')->whereNotNull('published_at');
     }
 
     /**

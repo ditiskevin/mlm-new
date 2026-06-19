@@ -3,7 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Article;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -13,7 +16,7 @@ class BlogController extends Controller
     {
         $category = $request->query('category');
 
-        $query = Article::query()->whereNotNull('published_at')->latest('published_at');
+        $query = Article::published()->latest('published_at');
         if ($category) {
             $query->where('category', $category);
         }
@@ -31,22 +34,43 @@ class BlogController extends Controller
             'published' => $a->published_at?->translatedFormat('j M Y'),
         ]);
 
-        $categories = Article::whereNotNull('published_at')
+        $categories = Article::published()
             ->select('category')
             ->distinct()
             ->orderBy('category')
             ->pluck('category');
 
+        $user = $request->user();
+        $mySubmissions = $user
+            ? Article::where('user_id', $user->id)
+                ->where('status', '!=', 'published')
+                ->latest()
+                ->get()
+                ->map(fn (Article $a) => [
+                    'title' => $a->title,
+                    'slug' => $a->slug,
+                    'status' => $a->status,
+                ])
+            : [];
+
         return Inertia::render('Blog/Index', [
             'articles' => $articles,
             'categories' => $categories,
             'activeCategory' => $category,
+            'canWrite' => (bool) $user,
+            'mySubmissions' => $mySubmissions,
         ]);
     }
 
-    public function show(Article $article): Response
+    public function show(Request $request, Article $article): Response
     {
-        $related = Article::whereNotNull('published_at')
+        // Pending/rejected articles are visible only to their author or an admin.
+        if ($article->status !== 'published' || ! $article->published_at) {
+            $user = $request->user();
+            abort_unless($user && ($user->is_admin || $user->id === $article->user_id), 404);
+        }
+
+        $related = Article::published()
             ->where('category', $article->category)
             ->where('id', '!=', $article->id)
             ->latest('published_at')
@@ -72,10 +96,70 @@ class BlogController extends Controller
                 'color_to' => $article->color_to,
                 'reading_minutes' => $article->reading_minutes,
                 'author_name' => $article->author_name,
+                'status' => $article->status,
                 'published' => $article->published_at?->translatedFormat('j F Y'),
                 'paragraphs' => $article->paragraphs(),
             ],
             'related' => $related,
         ]);
+    }
+
+    /** Story-writing form for logged-in members. */
+    public function create(Request $request): Response
+    {
+        return Inertia::render('Blog/Create', [
+            'categories' => Article::published()->select('category')->distinct()->orderBy('category')->pluck('category'),
+        ]);
+    }
+
+    /**
+     * Store a member-submitted story. It stays "pending" until an admin approves it.
+     *
+     * @throws ValidationException
+     */
+    public function store(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'title' => ['required', 'string', 'max:140'],
+            'category' => ['required', 'string', 'max:60'],
+            'emoji' => ['nullable', 'string', 'max:8'],
+            'excerpt' => ['required', 'string', 'min:20', 'max:300'],
+            'body' => ['required', 'string', 'min:200', 'max:20000'],
+        ]);
+
+        $user = $request->user();
+
+        // ~200 words per minute, at least 1.
+        $words = str_word_count(strip_tags($data['body']));
+        $minutes = max(1, (int) round($words / 200));
+
+        Article::create([
+            'user_id' => $user->id,
+            'title' => $data['title'],
+            'slug' => $this->uniqueSlug($data['title']),
+            'category' => $data['category'],
+            'author_name' => $user->name,
+            'status' => 'pending',
+            'emoji' => $data['emoji'] ?: '💛',
+            'reading_minutes' => $minutes,
+            'excerpt' => $data['excerpt'],
+            'body' => $data['body'],
+            'published_at' => null,
+        ]);
+
+        return redirect()->route('blog.index')
+            ->with('success', 'Bedankt voor je verhaal! Een beheerder bekijkt het en plaatst het zo snel mogelijk. 💛');
+    }
+
+    private function uniqueSlug(string $title): string
+    {
+        $base = Str::slug($title) ?: 'verhaal';
+        $slug = $base;
+        $i = 1;
+        while (Article::where('slug', $slug)->exists()) {
+            $slug = $base.'-'.(++$i);
+        }
+
+        return $slug;
     }
 }

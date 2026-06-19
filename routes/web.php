@@ -25,6 +25,10 @@ Route::get('/aanstaande-vader', [FatherController::class, 'index'])->name('fathe
 Route::get('/voor', [AudienceController::class, 'index'])->name('audiences.index');
 Route::get('/voor/{audience}', [AudienceController::class, 'show'])->name('audiences.show');
 Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
+Route::middleware('auth')->group(function () {
+    Route::get('/blog/schrijven', [BlogController::class, 'create'])->name('blog.create');
+    Route::post('/blog', [BlogController::class, 'store'])->name('blog.store');
+});
 Route::get('/blog/{article}', [BlogController::class, 'show'])->name('blog.show');
 
 // Contact
@@ -88,6 +92,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::delete('/listings/{listing}', [AdminController::class, 'destroyListing'])->name('listings.destroy');
     Route::delete('/babysitters/{babysitter}', [AdminController::class, 'destroyBabysitter'])->name('babysitters.destroy');
     Route::delete('/articles/{article}', [AdminController::class, 'destroyArticle'])->name('articles.destroy');
+    Route::get('/blog-inzendingen', [AdminController::class, 'pendingArticles'])->name('articles.pending');
+    Route::patch('/articles/{article}/approve', [AdminController::class, 'approveArticle'])->name('articles.approve');
     Route::patch('/users/{user}/toggle-admin', [AdminController::class, 'toggleAdmin'])->name('users.toggle-admin');
 
     // Contactberichten

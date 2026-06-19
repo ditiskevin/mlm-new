@@ -14,6 +14,10 @@ defineProps({
         <article style="max-width: 760px; margin: 0 auto; padding: 36px 0 8px">
             <Link :href="route('blog.index')" style="font-size: 13.5px; font-weight: 600; color: #c0566b; text-decoration: none">‹ Terug naar inspiratie</Link>
 
+            <div v-if="article.status && article.status !== 'published'" style="margin-top: 14px; background: #fbeed3; border: 1px solid #f0dcae; border-radius: 14px; padding: 12px 18px; font-size: 13.5px; color: #b07b1f">
+                ⏳ Dit is een voorvertoning. Je verhaal wacht op goedkeuring door een beheerder en is nog niet zichtbaar voor anderen.
+            </div>
+
             <div :style="{ marginTop: '16px', borderRadius: '28px', height: '180px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '64px', background: 'linear-gradient(150deg,' + article.color_from + ',' + article.color_to + ')' }">{{ article.emoji }}</div>
 
             <span style="display: inline-block; margin-top: 18px; font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 11px; letter-spacing: 0.5px; text-transform: uppercase; color: #c0566b; background: #fce7eb; border-radius: 999px; padding: 4px 11px">{{ article.category }}</span>

@@ -26,6 +26,7 @@ class AdminController extends Controller
     {
         return Inertia::render('Admin/Dashboard', [
             'openContactCount' => ContactMessage::whereNull('handled_at')->count(),
+            'pendingArticleCount' => Article::where('status', 'pending')->count(),
             'stats' => [
                 ['label' => 'Leden', 'value' => User::count(), 'emoji' => '👥'],
                 ['label' => 'Berichten', 'value' => Post::count(), 'emoji' => '💬'],
@@ -135,6 +136,36 @@ class AdminController extends Controller
         $article->delete();
 
         return back();
+    }
+
+    public function pendingArticles(): Response
+    {
+        return Inertia::render('Admin/Articles/Pending', [
+            'articles' => Article::with('user:id,name')
+                ->where('status', 'pending')
+                ->latest()
+                ->get()
+                ->map(fn (Article $a) => [
+                    'slug' => $a->slug,
+                    'title' => $a->title,
+                    'category' => $a->category,
+                    'emoji' => $a->emoji,
+                    'author' => $a->author_name,
+                    'excerpt' => $a->excerpt,
+                    'reading_minutes' => $a->reading_minutes,
+                    'when' => $a->created_at->diffForHumans(),
+                ]),
+        ]);
+    }
+
+    public function approveArticle(Article $article): RedirectResponse
+    {
+        $article->update([
+            'status' => 'published',
+            'published_at' => $article->published_at ?? now(),
+        ]);
+
+        return back()->with('success', 'Verhaal goedgekeurd en gepubliceerd. 💛');
     }
 
     public function toggleAdmin(User $user): RedirectResponse
