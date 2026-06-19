@@ -81,6 +81,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/community/posts/{post}/like', [CommunityController::class, 'toggleLike'])->name('community.posts.like');
     Route::post('/community/groups/{group}/follow', [CommunityController::class, 'toggleFollow'])->name('community.groups.follow');
 
+    // Eigen community-groep aanmaken / beheren
+    Route::get('/community/groepen/aanmaken', [CommunityController::class, 'createGroup'])->name('community.groups.create');
+    Route::post('/community/groepen', [CommunityController::class, 'storeGroup'])->name('community.groups.store');
+    Route::delete('/community/groepen/{group}', [CommunityController::class, 'destroyGroup'])->name('community.groups.destroy');
+
     // Melden (rapporteren) van inhoud of profielen
     Route::post('/meldingen', [\App\Http\Controllers\ReportController::class, 'store'])
         ->middleware('throttle:20,1')->name('reports.store');

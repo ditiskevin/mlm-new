@@ -26,10 +26,12 @@ class CommunityController extends Controller
         $groups = CommunityGroup::orderByDesc('members')->get()->map(fn (CommunityGroup $g) => [
             'id' => $g->id,
             'name' => $g->name,
+            'description' => $g->description,
             'members' => $g->members,
             'color_from' => $g->color_from,
             'color_to' => $g->color_to,
             'following' => $followedIds->has($g->id),
+            'is_owner' => $user && $g->user_id === $user->id,
         ]);
 
         $posts = Post::with(['group', 'comments' => fn ($q) => $q->oldest()])
@@ -151,8 +153,59 @@ class CommunityController extends Controller
 
     public function toggleFollow(CommunityGroup $group): RedirectResponse
     {
-        Auth::user()->followedGroups()->toggle($group->id);
+        $changes = Auth::user()->followedGroups()->toggle($group->id);
+
+        // Keep the displayed member counter in step with follows.
+        if (! empty($changes['attached'])) {
+            $group->increment('members');
+        } elseif (! empty($changes['detached'])) {
+            $group->decrement('members');
+            if ($group->members < 0) {
+                $group->update(['members' => 0]);
+            }
+        }
 
         return back();
+    }
+
+    public function createGroup(): Response
+    {
+        return Inertia::render('Community/CreateGroup');
+    }
+
+    public function storeGroup(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:60'],
+            'description' => ['nullable', 'string', 'max:500'],
+            'color_from' => ['nullable', 'string', 'regex:/^#([0-9A-Fa-f]{6})$/'],
+            'color_to' => ['nullable', 'string', 'regex:/^#([0-9A-Fa-f]{6})$/'],
+        ]);
+
+        $user = $request->user();
+
+        $group = CommunityGroup::create([
+            'user_id' => $user->id,
+            'name' => $data['name'],
+            'description' => $data['description'] ?? null,
+            'members' => 1,
+            'color_from' => $data['color_from'] ?: '#FCE7EB',
+            'color_to' => $data['color_to'] ?: '#EAF5EE',
+        ]);
+
+        // The creator automatically follows their own group.
+        $user->followedGroups()->attach($group->id);
+
+        return redirect()->route('community')->with('success', 'Je groep is aangemaakt! 💛');
+    }
+
+    public function destroyGroup(Request $request, CommunityGroup $group): RedirectResponse
+    {
+        $user = $request->user();
+        abort_unless($group->user_id === $user->id || $user->is_admin, 403);
+
+        $group->delete();
+
+        return redirect()->route('community')->with('success', 'Groep verwijderd.');
     }
 }

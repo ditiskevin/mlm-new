@@ -42,6 +42,12 @@ const toggleFollow = (group) => {
     router.post(route('community.groups.follow', group.id), {}, { preserveScroll: true, preserveState: true, only: [] });
 };
 
+const deleteGroup = (group) => {
+    if (confirm(`Weet je zeker dat je de groep "${group.name}" wilt verwijderen?`)) {
+        router.delete(route('community.groups.destroy', group.id), { preserveScroll: true });
+    }
+};
+
 const toggleComments = (post) => {
     if (openComments.has(post.id)) openComments.delete(post.id);
     else openComments.add(post.id);
@@ -116,12 +122,22 @@ const likeBtnStyle = (isLiked) =>
                     <div style="min-width: 0; background: #fff; border: 1px solid #f2e7e2; border-radius: 24px; padding: 20px; box-shadow: 0 10px 26px rgba(180, 150, 150, 0.09)">
                         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px"><span style="font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 15px; color: #473537">Groepen</span><span style="font-size: 12px; color: #c0566b; font-weight: 600">Alle</span></div>
                         <div style="display: grid; gap: 12px">
-                            <div v-for="g in groups" :key="g.id" style="min-width: 0; display: flex; align-items: center; gap: 12px">
+                            <div v-for="g in groups" :key="g.id" style="min-width: 0; display: flex; align-items: flex-start; gap: 12px">
                                 <span :style="{ width: '40px', height: '40px', borderRadius: '13px', flex: 'none', background: 'linear-gradient(135deg,' + g.color_from + ',' + g.color_to + ')' }"></span>
-                                <div style="flex: 1; min-width: 0"><div style="font-weight: 600; font-size: 14px; color: #473537; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{ g.name }}</div><div style="font-size: 12px; color: #9a8d88">{{ g.members }} leden</div></div>
+                                <div style="flex: 1; min-width: 0">
+                                    <div style="font-weight: 600; font-size: 14px; color: #473537; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{ g.name }}</div>
+                                    <div style="font-size: 12px; color: #9a8d88">{{ g.members }} leden<span v-if="g.is_owner"> · jouw groep</span></div>
+                                    <div v-if="g.description" style="font-size: 12px; color: #8a7d78; line-height: 1.4; margin-top: 3px">{{ g.description }}</div>
+                                    <button v-if="g.is_owner" @click="deleteGroup(g)" style="font-size: 11.5px; font-weight: 600; color: #b4574e; background: none; border: none; cursor: pointer; padding: 4px 0 0">Verwijderen</button>
+                                </div>
                                 <button @click="toggleFollow(g)" :style="{ flex: 'none', whiteSpace: 'nowrap', border: '1.5px solid ' + (following.has(g.id) ? '#F28B82' : '#F0D6DC'), background: following.has(g.id) ? '#FCE7EB' : '#fff', color: '#C0566B', fontWeight: 600, fontSize: '12px', borderRadius: '999px', padding: '6px 13px', cursor: 'pointer' }">{{ following.has(g.id) ? 'Volgend' : 'Volg' }}</button>
                             </div>
                         </div>
+                        <Link
+                            :href="isAuth ? route('community.groups.create') : route('login')"
+                            style="display: block; text-align: center; margin-top: 16px; font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 13px; color: #c0566b; background: #fbe9ed; border-radius: 999px; padding: 10px 14px; text-decoration: none"
+                            >+ Maak een groep</Link
+                        >
                     </div>
                 </div>
 
