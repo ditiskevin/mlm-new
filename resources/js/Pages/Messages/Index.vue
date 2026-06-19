@@ -1,12 +1,15 @@
 <script setup>
 import MlmLayout from '@/Layouts/MlmLayout.vue';
-import { Head, Link, router, useForm } from '@inertiajs/vue3';
-import { nextTick, ref, watch } from 'vue';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
+import { nextTick, onBeforeUnmount, ref, watch } from 'vue';
 
 const props = defineProps({
     conversations: { type: Array, default: () => [] },
     active: { type: Object, default: null },
 });
+
+const page = usePage();
+const currentUserId = page.props.auth?.user?.id;
 
 const form = useForm({ body: '' });
 const threadEl = ref(null);
@@ -19,6 +22,36 @@ const scrollToBottom = () => {
 
 watch(() => props.active?.id, scrollToBottom, { immediate: true });
 watch(() => props.active?.messages?.length, scrollToBottom);
+
+// --- Realtime via Laravel Reverb / Echo ---
+let channelId = null;
+
+const leaveChannel = () => {
+    if (channelId && window.Echo) {
+        window.Echo.leave(`conversation.${channelId}`);
+        channelId = null;
+    }
+};
+
+const subscribe = (id) => {
+    if (!window.Echo || !id || id === channelId) return;
+    leaveChannel();
+    channelId = id;
+    window.Echo.private(`conversation.${id}`).listen('.message.sent', (e) => {
+        // Ignore our own echo; the local copy already shows it.
+        if (e.sender_id === currentUserId) return;
+        // Dedupe by id, then append for an instant feel.
+        if (props.active && !props.active.messages.some((m) => m.id === e.id)) {
+            props.active.messages.push({ id: e.id, body: e.body, mine: false, author: e.author, when: e.when });
+            scrollToBottom();
+        }
+        // Reconcile read state + sidebar previews + the unread nav badge.
+        router.reload({ only: ['conversations', 'auth'], preserveScroll: true });
+    });
+};
+
+watch(() => props.active?.id, (id) => (id ? subscribe(id) : leaveChannel()), { immediate: true });
+onBeforeUnmount(leaveChannel);
 
 const send = () => {
     if (!form.body.trim() || !props.active) return;

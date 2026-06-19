@@ -26,6 +26,12 @@ class Conversation extends Model
             ->withTimestamps();
     }
 
+    /** Whether the given user takes part in this conversation. */
+    public function hasParticipant(User $user): bool
+    {
+        return $this->participants()->whereKey($user->id)->exists();
+    }
+
     /**
      * Find an existing 1-to-1 conversation between two users, or create one.
      */

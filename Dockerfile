@@ -36,6 +36,17 @@ COPY resources ./resources
 # so make that package available to the Vite build from the vendor stage.
 COPY --from=vendor /app/vendor/tightenco/ziggy ./vendor/tightenco/ziggy
 
+# Reverb (realtime) client config is baked into the JS at build time, so it must
+# be available here. Pass these as build args in Coolify (public domain, wss:443).
+ARG VITE_REVERB_APP_KEY
+ARG VITE_REVERB_HOST
+ARG VITE_REVERB_PORT=443
+ARG VITE_REVERB_SCHEME=https
+ENV VITE_REVERB_APP_KEY=$VITE_REVERB_APP_KEY \
+    VITE_REVERB_HOST=$VITE_REVERB_HOST \
+    VITE_REVERB_PORT=$VITE_REVERB_PORT \
+    VITE_REVERB_SCHEME=$VITE_REVERB_SCHEME
+
 RUN npm run build
 
 # ---------------------------------------------------------------------------

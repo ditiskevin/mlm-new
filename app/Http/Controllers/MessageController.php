@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\MessageSent;
 use App\Models\Conversation;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -58,7 +59,7 @@ class MessageController extends Controller
             'body' => ['required', 'string', 'max:4000'],
         ]);
 
-        $conversation->messages()->create([
+        $message = $conversation->messages()->create([
             'user_id' => $user->id,
             'body' => $data['body'],
         ]);
@@ -66,12 +67,16 @@ class MessageController extends Controller
         $conversation->forceFill(['last_message_at' => now()])->save();
         $this->markRead($conversation, $user);
 
+        // Push to the conversation channel in real time (ShouldBroadcastNow).
+        // The sender already has the message locally and dedupes by id.
+        MessageSent::dispatch($message);
+
         return back();
     }
 
     private function authorizeParticipant(Conversation $conversation, User $user): void
     {
-        abort_unless($conversation->participants()->whereKey($user->id)->exists(), 403);
+        abort_unless($conversation->hasParticipant($user), 403);
     }
 
     private function markRead(Conversation $conversation, User $user): void

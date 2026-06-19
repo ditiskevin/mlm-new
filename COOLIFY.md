@@ -55,6 +55,16 @@ MAIL_USERNAME=...
 MAIL_PASSWORD=...
 MAIL_FROM_ADDRESS=hello@your-domain.tld
 MAIL_FROM_NAME="${APP_NAME}"
+
+# Realtime chat (Laravel Reverb) — see the "Realtime" section below
+BROADCAST_CONNECTION=reverb
+REVERB_APP_ID=...
+REVERB_APP_KEY=...
+REVERB_APP_SECRET=...
+# Server-side publishing happens inside the container, so point at localhost:
+REVERB_HOST=127.0.0.1
+REVERB_PORT=8080
+REVERB_SCHEME=http
 ```
 
 > **Set a permanent `APP_KEY`.** If left empty the container generates a temporary
@@ -70,7 +80,48 @@ The entrypoint (`docker/entrypoint.sh`) runs automatically:
 4. Rebuilds `config`, `route`, `view` and `event` caches for production.
 
 Then supervisor starts **php-fpm**, **nginx**, the **queue worker**
-(`queue:work`) and the **scheduler** (`schedule:work`).
+(`queue:work`), the **scheduler** (`schedule:work`) and the **Reverb**
+websocket server (`reverb:start` on `:8080`, proxied by nginx at `/app`).
+
+## Realtime chat (Laravel Reverb)
+
+Private messages update live over WebSockets. The image already runs the Reverb
+server under supervisor and nginx proxies the `/app` path to it, so no extra
+container or exposed port is needed — clients connect over the normal HTTPS
+domain (`wss://your-domain.tld/app`).
+
+Two things must be configured:
+
+1. **Runtime env** (server-side publishing) — set `BROADCAST_CONNECTION=reverb`
+   and the `REVERB_APP_ID/KEY/SECRET` plus `REVERB_HOST=127.0.0.1`,
+   `REVERB_PORT=8080`, `REVERB_SCHEME=http` (the app talks to the local Reverb).
+   Generate the app credentials once with `php artisan reverb:install`.
+
+2. **Build args** (browser client) — the `VITE_REVERB_*` values are compiled into
+   the JS at image-build time, so pass them as **build arguments** in Coolify
+   (Build → Build Variables), pointing at the *public* domain over TLS:
+
+   ```
+   VITE_REVERB_APP_KEY=<same as REVERB_APP_KEY>
+   VITE_REVERB_HOST=your-domain.tld
+   VITE_REVERB_PORT=443
+   VITE_REVERB_SCHEME=https
+   ```
+
+   These must match `REVERB_APP_KEY`; if they're missing the chat silently falls
+   back to polling-free, non-live behaviour (messages still send, they just don't
+   appear until the page is reloaded).
+
+### Local development
+
+```bash
+php artisan reverb:start      # websocket server on :8080
+npm run dev                   # or `npm run build`
+php artisan serve             # the app
+```
+
+The committed `.env`/`.env.example` already point the dev client at
+`localhost:8080`, so realtime works out of the box once `reverb:start` is running.
 
 ## Files added for deployment
 
