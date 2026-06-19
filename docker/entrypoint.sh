@@ -42,6 +42,18 @@ if [ "${RUN_MIGRATIONS:-true}" = "true" ]; then
 fi
 
 # ---------------------------------------------------------------------------
+# Seed standard template content (doelgroepen / "Ik ben", checklists,
+# zwangerschapsweken, namen, forumcategorieën, groepen, startartikelen).
+# Idempotent + self-guarded: skips when the site is already seeded, so a
+# redeploy never overwrites admin edits. Set SEED_FRESH=true to force a re-sync.
+# ---------------------------------------------------------------------------
+if [ "${RUN_SEEDERS:-true}" = "true" ]; then
+    echo "[entrypoint] Seeding template content..."
+    php artisan db:seed --class=TemplateSeeder --force --no-interaction || \
+        echo "[entrypoint] WARNING: seeding failed (is the database reachable?)"
+fi
+
+# ---------------------------------------------------------------------------
 # Optimize: rebuild config/route/view/event caches for production
 # ---------------------------------------------------------------------------
 php artisan optimize:clear --no-interaction || true

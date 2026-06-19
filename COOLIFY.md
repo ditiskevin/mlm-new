@@ -77,7 +77,15 @@ The entrypoint (`docker/entrypoint.sh`) runs automatically:
 1. Creates writable `storage/` + `bootstrap/cache` dirs and fixes ownership.
 2. Creates the `public/storage` symlink.
 3. Runs `php artisan migrate --force` (disable with `RUN_MIGRATIONS=false`).
-4. Rebuilds `config`, `route`, `view` and `event` caches for production.
+4. Seeds the standard **template content** — the "Ik ben…" / "Voor wie"
+   doelgroepen, checklists, zwangerschapsweken, babynamen, forumcategorieën,
+   groepen en startartikelen (disable with `RUN_SEEDERS=false`). This is
+   idempotent and **self-guarded**: once the site has doelgroepen it is skipped,
+   so a redeploy never overwrites content an admin has edited. To force a
+   re-sync of the templates to their seed definitions, set `SEED_FRESH=true`
+   for one deploy. Demo content (example posts, marktplaats, oppas) is **not**
+   seeded automatically — run `php artisan db:seed` once by hand if you want it.
+5. Rebuilds `config`, `route`, `view` and `event` caches for production.
 
 Then supervisor starts **php-fpm**, **nginx**, the **queue worker**
 (`queue:work`), the **scheduler** (`schedule:work`) and the **Reverb**
