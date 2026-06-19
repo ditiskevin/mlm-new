@@ -35,6 +35,8 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'auth' => [
                 'user' => $request->user(),
+                // Lazily evaluated so it only runs when a page needs it.
+                'unreadMessages' => fn () => $request->user()?->unreadConversationsCount() ?? 0,
             ],
             'audiences' => Schema::hasTable('audiences')
                 ? Audience::orderBy('position')->get(['slug', 'name', 'emoji'])

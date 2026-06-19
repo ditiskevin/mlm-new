@@ -84,6 +84,13 @@ Route::middleware('auth')->group(function () {
     // Melden (rapporteren) van inhoud of profielen
     Route::post('/meldingen', [\App\Http\Controllers\ReportController::class, 'store'])
         ->middleware('throttle:20,1')->name('reports.store');
+
+    // Privéberichten (chat)
+    Route::get('/berichten', [\App\Http\Controllers\MessageController::class, 'index'])->name('messages.index');
+    Route::post('/berichten/start/{user}', [\App\Http\Controllers\MessageController::class, 'startWith'])->name('messages.start');
+    Route::get('/berichten/{conversation}', [\App\Http\Controllers\MessageController::class, 'index'])->name('messages.show');
+    Route::post('/berichten/{conversation}', [\App\Http\Controllers\MessageController::class, 'store'])
+        ->middleware('throttle:60,1')->name('messages.store');
 });
 
 // Admin moderation area

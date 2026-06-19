@@ -47,6 +47,7 @@ class MarketplaceController extends Controller
         return Inertia::render('Marketplace/Show', [
             'listing' => array_merge($this->card($listing), [
                 'id' => $listing->id,
+                'owner_id' => $listing->user_id,
                 'description' => $listing->description,
                 'condition' => $listing->condition,
                 'canDelete' => auth()->id() && auth()->id() === $listing->user_id,

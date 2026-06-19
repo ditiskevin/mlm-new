@@ -1,11 +1,15 @@
 <script setup>
 import MlmLayout from '@/Layouts/MlmLayout.vue';
 import ReportButton from '@/Components/ReportButton.vue';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 
 const props = defineProps({
     listing: { type: Object, required: true },
 });
+
+const isAuth = computed(() => !!usePage().props.auth?.user);
+const canMessage = computed(() => props.listing.owner_id && !props.listing.canDelete);
 
 const remove = () => {
     if (confirm('Weet je zeker dat je deze advertentie wilt verwijderen?')) {
@@ -42,7 +46,20 @@ const remove = () => {
                     <div style="display: flex; align-items: center; gap: 12px; border-top: 1px solid #f4ece8; padding-top: 16px">
                         <span :style="{ width: '44px', height: '44px', borderRadius: '50%', flex: 'none', background: listing.avatar_color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Poppins, sans-serif', fontWeight: 700, color: '#fff', fontSize: '18px' }">{{ listing.author_name.charAt(0) }}</span>
                         <div style="flex: 1"><div style="font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 15px; color: #473537">{{ listing.author_name }}</div><div style="font-size: 12.5px; color: #9a8d88">Aanbieder</div></div>
-                        <Link :href="route('community')" style="font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 14px; color: #fff; background: linear-gradient(135deg, #f7a8b5, #f28b82); border: none; border-radius: 999px; padding: 11px 20px; text-decoration: none">Stuur bericht</Link>
+                        <Link
+                            v-if="canMessage && isAuth"
+                            :href="route('messages.start', listing.owner_id)"
+                            method="post"
+                            as="button"
+                            style="font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 14px; color: #fff; background: linear-gradient(135deg, #f7a8b5, #f28b82); border: none; border-radius: 999px; padding: 11px 20px; text-decoration: none; cursor: pointer"
+                            >Stuur bericht</Link
+                        >
+                        <Link
+                            v-else-if="canMessage"
+                            :href="route('login')"
+                            style="font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 14px; color: #fff; background: linear-gradient(135deg, #f7a8b5, #f28b82); border: none; border-radius: 999px; padding: 11px 20px; text-decoration: none"
+                            >Log in om te reageren</Link
+                        >
                     </div>
 
                     <div style="margin-top: 16px; display: flex; gap: 16px; align-items: center">

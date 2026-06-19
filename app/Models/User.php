@@ -149,4 +149,32 @@ class User extends Authenticatable
     {
         return $this->hasMany(Post::class);
     }
+
+    public function conversations(): BelongsToMany
+    {
+        return $this->belongsToMany(Conversation::class)
+            ->withPivot('last_read_at')
+            ->withTimestamps();
+    }
+
+    /**
+     * Number of conversations that have a message from someone else
+     * newer than this user's last_read_at (or never read).
+     */
+    public function unreadConversationsCount(): int
+    {
+        return \Illuminate\Support\Facades\DB::table('conversation_user as cu')
+            ->where('cu.user_id', $this->id)
+            ->whereExists(function ($q) {
+                $q->selectRaw('1')
+                    ->from('messages as m')
+                    ->whereColumn('m.conversation_id', 'cu.conversation_id')
+                    ->where('m.user_id', '!=', $this->id)
+                    ->where(function ($q2) {
+                        $q2->whereNull('cu.last_read_at')
+                            ->orWhereColumn('m.created_at', '>', 'cu.last_read_at');
+                    });
+            })
+            ->count();
+    }
 }

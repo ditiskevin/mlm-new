@@ -36,6 +36,7 @@ class BabysitterController extends Controller
         return Inertia::render('Babysitter/Show', [
             'sitter' => array_merge($this->card($babysitter), [
                 'bio' => $babysitter->bio,
+                'owner_id' => $babysitter->user_id,
                 'canDelete' => auth()->id() && auth()->id() === $babysitter->user_id,
             ]),
         ]);

@@ -1,0 +1,135 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Conversation;
+use App\Models\User;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
+
+class MessageController extends Controller
+{
+    /**
+     * Inbox. Optionally renders an open conversation thread.
+     */
+    public function index(Request $request, ?Conversation $conversation = null): Response
+    {
+        $user = $request->user();
+
+        if ($conversation && ! $conversation->exists) {
+            $conversation = null;
+        }
+
+        if ($conversation) {
+            $this->authorizeParticipant($conversation, $user);
+            $this->markRead($conversation, $user);
+        }
+
+        return Inertia::render('Messages/Index', [
+            'conversations' => $this->inbox($user),
+            'active' => $conversation ? $this->thread($conversation, $user) : null,
+        ]);
+    }
+
+    /**
+     * Start (or reopen) a 1-to-1 conversation with another member.
+     */
+    public function startWith(Request $request, User $user): RedirectResponse
+    {
+        $me = $request->user();
+
+        if ($user->id === $me->id) {
+            return redirect()->route('messages.index')->with('error', 'Je kunt geen bericht naar jezelf sturen.');
+        }
+
+        $conversation = Conversation::between($me, $user);
+
+        return redirect()->route('messages.show', $conversation);
+    }
+
+    public function store(Request $request, Conversation $conversation): RedirectResponse
+    {
+        $user = $request->user();
+        $this->authorizeParticipant($conversation, $user);
+
+        $data = $request->validate([
+            'body' => ['required', 'string', 'max:4000'],
+        ]);
+
+        $conversation->messages()->create([
+            'user_id' => $user->id,
+            'body' => $data['body'],
+        ]);
+
+        $conversation->forceFill(['last_message_at' => now()])->save();
+        $this->markRead($conversation, $user);
+
+        return back();
+    }
+
+    private function authorizeParticipant(Conversation $conversation, User $user): void
+    {
+        abort_unless($conversation->participants()->whereKey($user->id)->exists(), 403);
+    }
+
+    private function markRead(Conversation $conversation, User $user): void
+    {
+        $conversation->participants()->updateExistingPivot($user->id, ['last_read_at' => now()]);
+    }
+
+    /**
+     * Conversation list for the sidebar, newest activity first.
+     */
+    private function inbox(User $user): array
+    {
+        return $user->conversations()
+            ->with(['participants:id,name,avatar_color,avatar_path', 'messages' => fn ($q) => $q->latest()->limit(1)])
+            ->orderByRaw('COALESCE(last_message_at, conversations.created_at) DESC')
+            ->get()
+            ->map(function (Conversation $c) use ($user) {
+                $other = $c->participants->firstWhere('id', '!=', $user->id);
+                $last = $c->messages->first();
+                $lastReadAt = $c->pivot->last_read_at;
+                $unread = $last
+                    && $last->user_id !== $user->id
+                    && ($lastReadAt === null || $last->created_at->gt($lastReadAt));
+
+                return [
+                    'id' => $c->id,
+                    'name' => $other?->name ?? 'Onbekend lid',
+                    'avatar_color' => $other?->avatar_color ?? '#F7A8B5',
+                    'avatar_url' => $other?->avatar_url,
+                    'initial' => mb_substr($other?->name ?? '?', 0, 1),
+                    'preview' => $last ? \Illuminate\Support\Str::limit($last->body, 48) : 'Nog geen berichten',
+                    'when' => $last?->created_at->diffForHumans(),
+                    'unread' => $unread,
+                ];
+            })
+            ->all();
+    }
+
+    private function thread(Conversation $conversation, User $user): array
+    {
+        $conversation->load(['participants:id,name,avatar_color,avatar_path', 'messages.sender:id,name,avatar_color']);
+        $other = $conversation->participants->firstWhere('id', '!=', $user->id);
+
+        return [
+            'id' => $conversation->id,
+            'other' => [
+                'name' => $other?->name ?? 'Onbekend lid',
+                'avatar_color' => $other?->avatar_color ?? '#F7A8B5',
+                'avatar_url' => $other?->avatar_url,
+                'initial' => mb_substr($other?->name ?? '?', 0, 1),
+            ],
+            'messages' => $conversation->messages->map(fn ($m) => [
+                'id' => $m->id,
+                'body' => $m->body,
+                'mine' => $m->user_id === $user->id,
+                'author' => $m->sender?->name,
+                'when' => $m->created_at->diffForHumans(),
+            ])->values(),
+        ];
+    }
+}

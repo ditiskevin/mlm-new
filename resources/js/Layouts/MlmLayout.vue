@@ -4,6 +4,7 @@ import { computed, ref, watch } from 'vue';
 
 const page = usePage();
 const user = computed(() => page.props.auth?.user);
+const unreadMessages = computed(() => page.props.auth?.unreadMessages ?? 0);
 
 // One-shot flash toast (success / error) shared from the server.
 const toast = ref(null);
@@ -193,6 +194,16 @@ const navStyle = (active) =>
                     >
 
                     <template v-if="user">
+                        <Link
+                            :href="route('messages.index')"
+                            :style="navStyle(route().current('messages.*')) + ';position:relative'"
+                            title="Berichten"
+                            >💬<span
+                                v-if="unreadMessages"
+                                style="position: absolute; top: 0; right: 2px; min-width: 16px; height: 16px; font-size: 10px; font-weight: 700; color: #fff; background: #f28b82; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; padding: 0 4px"
+                                >{{ unreadMessages > 9 ? '9+' : unreadMessages }}</span
+                            ></Link
+                        >
                         <Link
                             :href="route('dashboard')"
                             style="
