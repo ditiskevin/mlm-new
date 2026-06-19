@@ -7,15 +7,24 @@ import { Head, Link, useForm } from '@inertiajs/vue3';
 
 const props = defineProps({
     parentTypes: { type: Object, default: () => ({ ouder: 'Ouder' }) },
+    genders: { type: Object, default: () => ({}) },
+    parentingRoles: { type: Object, default: () => ({}) },
 });
 
 const form = useForm({
     name: '',
     email: '',
     parent_type: 'ouder',
+    gender: null,
+    parenting_role: null,
     password: '',
     password_confirmation: '',
 });
+
+// Click a selected chip again to clear an optional choice.
+const toggleOptional = (field, key) => {
+    form[field] = form[field] === key ? null : key;
+};
 
 const typeChipStyle = (active) =>
     "font-family:'Quicksand',sans-serif;font-weight:600;font-size:13px;border-radius:999px;padding:8px 14px;cursor:pointer;border:1.5px solid " +
@@ -55,6 +64,23 @@ const submit = () => {
                     <button v-for="(lbl, key) in parentTypes" :key="key" type="button" @click="form.parent_type = key" :style="typeChipStyle(form.parent_type === key)">{{ lbl }}</button>
                 </div>
                 <InputError class="mt-2" :message="form.errors.parent_type" />
+            </div>
+
+            <div class="mt-4">
+                <InputLabel value="Mijn rol als ouder (optioneel)" />
+                <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px">
+                    <button v-for="(lbl, key) in parentingRoles" :key="key" type="button" @click="toggleOptional('parenting_role', key)" :style="typeChipStyle(form.parenting_role === key)">{{ lbl }}</button>
+                </div>
+                <p style="font-size: 12.5px; color: #a99b96; margin: 7px 0 0">Kies bijvoorbeeld “Vader” om papa-functies en de papa-checklist te zien.</p>
+                <InputError class="mt-2" :message="form.errors.parenting_role" />
+            </div>
+
+            <div class="mt-4">
+                <InputLabel value="Geslacht (optioneel)" />
+                <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px">
+                    <button v-for="(lbl, key) in genders" :key="key" type="button" @click="toggleOptional('gender', key)" :style="typeChipStyle(form.gender === key)">{{ lbl }}</button>
+                </div>
+                <InputError class="mt-2" :message="form.errors.gender" />
             </div>
 
             <div class="mt-4">

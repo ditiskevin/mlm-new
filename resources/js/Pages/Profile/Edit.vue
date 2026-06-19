@@ -9,6 +9,8 @@ defineProps({
     mustVerifyEmail: { type: Boolean },
     status: { type: String },
     parentTypes: { type: Object, default: () => ({}) },
+    genders: { type: Object, default: () => ({}) },
+    parentingRoles: { type: Object, default: () => ({}) },
 });
 </script>
 
@@ -22,7 +24,7 @@ defineProps({
 
             <div style="display: grid; gap: 18px">
                 <div style="background: #fff; border: 1px solid #f2e7e2; border-radius: 22px; padding: 26px; box-shadow: 0 10px 26px rgba(180, 150, 150, 0.08)">
-                    <UpdateProfileInformationForm :must-verify-email="mustVerifyEmail" :status="status" :parent-types="parentTypes" class="max-w-xl" />
+                    <UpdateProfileInformationForm :must-verify-email="mustVerifyEmail" :status="status" :parent-types="parentTypes" :genders="genders" :parenting-roles="parentingRoles" class="max-w-xl" />
                 </div>
                 <div style="background: #fff; border: 1px solid #f2e7e2; border-radius: 22px; padding: 26px; box-shadow: 0 10px 26px rgba(180, 150, 150, 0.08)">
                     <UpdatePasswordForm class="max-w-xl" />

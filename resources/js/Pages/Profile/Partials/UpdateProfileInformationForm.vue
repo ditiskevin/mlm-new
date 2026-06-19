@@ -17,6 +17,14 @@ defineProps({
         type: Object,
         default: () => ({ ouder: 'Ouder' }),
     },
+    genders: {
+        type: Object,
+        default: () => ({}),
+    },
+    parentingRoles: {
+        type: Object,
+        default: () => ({}),
+    },
 });
 
 const user = usePage().props.auth.user;
@@ -25,11 +33,17 @@ const form = useForm({
     name: user.name,
     email: user.email,
     parent_type: user.parent_type ?? 'ouder',
+    gender: user.gender ?? null,
+    parenting_role: user.parenting_role ?? null,
     role_label: user.role_label ?? '',
     bio: user.bio ?? '',
     avatar_color: user.avatar_color ?? '#F7A8B5',
     avatar: null,
 });
+
+const toggleOptional = (field, key) => {
+    form[field] = form[field] === key ? null : key;
+};
 
 const swatches = ['#F7A8B5', '#F28B82', '#E0A24A', '#7FC0A0', '#5FB07F', '#7AA8DC', '#A9CCE8', '#A87FD0', '#D3BCE6', '#C99BA2'];
 
@@ -99,6 +113,23 @@ const typeChipStyle = (active) =>
                     <button v-for="(lbl, key) in parentTypes" :key="key" type="button" @click="form.parent_type = key" :style="typeChipStyle(form.parent_type === key)">{{ lbl }}</button>
                 </div>
                 <InputError class="mt-2" :message="form.errors.parent_type" />
+            </div>
+
+            <div>
+                <InputLabel value="Mijn rol als ouder (optioneel)" />
+                <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px">
+                    <button v-for="(lbl, key) in parentingRoles" :key="key" type="button" @click="toggleOptional('parenting_role', key)" :style="typeChipStyle(form.parenting_role === key)">{{ lbl }}</button>
+                </div>
+                <p style="font-size: 12.5px; color: #a99b96; margin: 7px 0 0">Kies “Vader” of “Aanstaande ouder” om papa-functies te zien op je account.</p>
+                <InputError class="mt-2" :message="form.errors.parenting_role" />
+            </div>
+
+            <div>
+                <InputLabel value="Geslacht (optioneel)" />
+                <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px">
+                    <button v-for="(lbl, key) in genders" :key="key" type="button" @click="toggleOptional('gender', key)" :style="typeChipStyle(form.gender === key)">{{ lbl }}</button>
+                </div>
+                <InputError class="mt-2" :message="form.errors.gender" />
             </div>
 
             <div>

@@ -5,9 +5,14 @@ import { computed } from 'vue';
 
 const user = computed(() => usePage().props.auth?.user ?? {});
 
-defineProps({
+const props = defineProps({
     suggestedAudience: { type: Object, default: null },
+    fatherCard: { type: Object, default: null },
 });
+
+const fatherPct = computed(() =>
+    props.fatherCard && props.fatherCard.total ? Math.round((props.fatherCard.done / props.fatherCard.total) * 100) : 0,
+);
 
 const shortcuts = [
     { label: 'Mijn profiel', desc: 'Naam, bio en avatarkleur aanpassen', href: route('profile.edit'), emoji: '👤', bg: '#FCE7EB' },
@@ -45,6 +50,23 @@ const shortcuts = [
                     <div style="font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 17px; color: #473537">Jouw hoek: {{ suggestedAudience.name }}</div>
                     <div style="font-size: 13.5px; color: #6c5f5b">{{ suggestedAudience.tagline }} — bekijk tips, je groep en het forum →</div>
                 </div>
+            </Link>
+
+            <!-- Father journey (shown when the member is a (expectant) father) -->
+            <Link
+                v-if="fatherCard"
+                :href="route('father')"
+                style="display: flex; align-items: center; gap: 18px; margin-top: 20px; border-radius: 22px; padding: 20px 24px; text-decoration: none; border: 1px solid #dcefe3; background: linear-gradient(150deg, #eef8f1, #faf8f5)"
+            >
+                <span style="font-size: 40px">👨‍🍼</span>
+                <div style="flex: 1">
+                    <div style="font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 17px; color: #473537">Voor de aanstaande vader</div>
+                    <div style="font-size: 13.5px; color: #6c5f5b; margin-bottom: 8px">Tips per trimester en jouw papa-checklist — {{ fatherCard.done }}/{{ fatherCard.total }} afgerond.</div>
+                    <div style="height: 8px; background: #e2efe7; border-radius: 999px; overflow: hidden; max-width: 360px">
+                        <div :style="{ height: '100%', width: fatherPct + '%', background: 'linear-gradient(90deg, #8fd0a6, #5fb07f)', borderRadius: '999px', transition: 'width .3s' }"></div>
+                    </div>
+                </div>
+                <span style="flex: none; font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 20px; color: #5fa07c">{{ fatherPct }}%</span>
             </Link>
 
             <h2 style="font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 20px; color: #473537; margin: 30px 0 16px">Snel naar</h2>

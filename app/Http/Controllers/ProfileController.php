@@ -23,6 +23,8 @@ class ProfileController extends Controller
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
             'status' => session('status'),
             'parentTypes' => User::parentTypeMap(),
+            'genders' => User::GENDERS,
+            'parentingRoles' => User::PARENTING_ROLES,
         ]);
     }
 

@@ -23,6 +23,8 @@ class RegisteredUserController extends Controller
     {
         return Inertia::render('Auth/Register', [
             'parentTypes' => User::parentTypeMap(),
+            'genders' => User::GENDERS,
+            'parentingRoles' => User::PARENTING_ROLES,
         ]);
     }
 
@@ -38,6 +40,8 @@ class RegisteredUserController extends Controller
             'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'parent_type' => ['required', 'in:'.implode(',', array_keys(User::parentTypeMap()))],
+            'gender' => ['nullable', 'in:'.implode(',', array_keys(User::GENDERS))],
+            'parenting_role' => ['nullable', 'in:'.implode(',', array_keys(User::PARENTING_ROLES))],
         ]);
 
         $user = User::create([
@@ -45,6 +49,8 @@ class RegisteredUserController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'parent_type' => $request->parent_type,
+            'gender' => $request->gender,
+            'parenting_role' => $request->parenting_role,
         ]);
 
         event(new Registered($user));
