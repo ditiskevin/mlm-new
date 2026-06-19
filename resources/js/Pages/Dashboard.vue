@@ -30,7 +30,7 @@ const shortcuts = [
     <Head title="Mijn account" />
     <MlmLayout>
         <section style="padding: 42px 0 8px">
-            <div style="background: linear-gradient(135deg, #fce7eb, #eaf5ee); border-radius: 28px; padding: 30px 32px; display: flex; align-items: center; gap: 20px; box-shadow: 0 12px 30px rgba(214, 150, 160, 0.14)">
+            <div class="mlm-wrap-mobile" style="background: linear-gradient(135deg, #fce7eb, #eaf5ee); border-radius: 28px; padding: 30px 32px; display: flex; align-items: center; gap: 20px; box-shadow: 0 12px 30px rgba(214, 150, 160, 0.14)">
                 <img v-if="user.avatar_url" :src="user.avatar_url" alt="" style="width: 64px; height: 64px; border-radius: 50%; flex: none; object-fit: cover" />
                 <span v-else :style="{ width: '64px', height: '64px', borderRadius: '50%', flex: 'none', background: user.avatar_color || '#F7A8B5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Poppins, sans-serif', fontWeight: 700, color: '#fff', fontSize: '26px' }">{{ (user.name || '?').charAt(0) }}</span>
                 <div style="flex: 1">

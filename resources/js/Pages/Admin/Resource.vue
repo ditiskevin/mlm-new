@@ -36,7 +36,7 @@ const remove = (row) => {
             <input v-model="search" placeholder="Zoeken…" style="border: none; outline: none; background: none; font-family: 'Quicksand', sans-serif; font-size: 14px; color: #5d514d; width: 100%" />
         </div>
 
-        <div style="background: #fff; border: 1px solid #f2e7e2; border-radius: 18px; overflow: hidden; box-shadow: 0 6px 16px rgba(180, 150, 150, 0.05)">
+        <div class="mlm-table-wrap" style="background: #fff; border: 1px solid #f2e7e2; border-radius: 18px; overflow: hidden; box-shadow: 0 6px 16px rgba(180, 150, 150, 0.05)">
             <table style="width: 100%; border-collapse: collapse">
                 <thead>
                     <tr style="background: #faf6f3">

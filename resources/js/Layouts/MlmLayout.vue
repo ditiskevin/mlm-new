@@ -94,9 +94,22 @@ const groupActive = (item) => (item.match && route().current(item.match)) || ite
 
 const openMenu = ref(null);
 
+// Mobile hamburger menu — closes automatically on navigation.
+const mobileOpen = ref(false);
+watch(
+    () => page.url,
+    () => (mobileOpen.value = false),
+);
+
 const navStyle = (active) =>
     "font-family:'Quicksand',sans-serif;font-weight:600;font-size:14px;border:none;border-radius:999px;padding:9px 16px;cursor:pointer;transition:all .15s ease;text-decoration:none;display:inline-flex;align-items:center;gap:5px;" +
     (active ? 'background:#FBE0E6;color:#C0566B' : 'background:transparent;color:#7a6c67');
+
+const mobileLinkStyle = (active, indent = false) =>
+    "display:flex;align-items:center;gap:8px;font-family:'Quicksand',sans-serif;font-weight:600;font-size:15px;border:none;border-radius:12px;padding:12px " +
+    (indent ? '16px' : '12px') +
+    ';width:100%;box-sizing:border-box;cursor:pointer;text-decoration:none;text-align:left;' +
+    (active ? 'background:#FBE0E6;color:#C0566B' : 'background:transparent;color:#5d514d');
 </script>
 
 <template>
@@ -131,11 +144,24 @@ const navStyle = (active) =>
                     gap: 6px;
                 "
             >
-                <Link :href="route('home')" style="display: flex; align-items: center; text-decoration: none">
-                    <img src="/images/logo.png" alt="MommyLovesMe.nl" style="height: 150px; width: auto; display: block" />
-                </Link>
+                <div class="mlm-topbar" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 12px">
+                    <Link :href="route('home')" style="display: flex; align-items: center; text-decoration: none">
+                        <img src="/images/logo.png" alt="MommyLovesMe.nl" class="mlm-logo" style="height: 150px; width: auto; display: block" />
+                    </Link>
+                    <button
+                        type="button"
+                        class="mlm-burger"
+                        @click="mobileOpen = !mobileOpen"
+                        aria-label="Menu"
+                        style="align-items: center; justify-content: center; background: #fce7eb; border: none; border-radius: 12px; width: 44px; height: 44px; cursor: pointer; color: #c0566b; position: relative"
+                    >
+                        <svg v-if="!mobileOpen" width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" /></svg>
+                        <svg v-else width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" /></svg>
+                        <span v-if="user && unreadMessages && !mobileOpen" style="position: absolute; top: 4px; right: 4px; width: 9px; height: 9px; border-radius: 50%; background: #f28b82"></span>
+                    </button>
+                </div>
 
-                <div style="display: flex; align-items: center; gap: 4px">
+                <div class="mlm-desktop-nav" style="display: flex; align-items: center; gap: 4px">
                     <template v-for="item in navItems" :key="item.label">
                         <!-- plain link -->
                         <Link v-if="!item.children" :href="route(item.routeName)" :style="navStyle(isActive(item))">{{ item.label }}</Link>
@@ -262,6 +288,33 @@ const navStyle = (active) =>
                         >
                     </template>
                 </div>
+
+                <!-- Mobile menu -->
+                <div v-show="mobileOpen" class="mlm-mobile-menu" style="width: 100%; margin-top: 6px; border-top: 1px solid #f1e7e2; padding-top: 8px; display: grid; gap: 2px">
+                    <template v-for="item in navItems" :key="'m-' + item.label">
+                        <Link v-if="!item.children" :href="route(item.routeName)" :style="mobileLinkStyle(isActive(item))">{{ item.label }}</Link>
+                        <template v-else>
+                            <div style="font-size: 11px; font-weight: 700; letter-spacing: 0.4px; text-transform: uppercase; color: #b5a8a3; padding: 12px 12px 4px">{{ item.label }}</div>
+                            <Link v-for="child in item.children" :key="'m-' + child.label" :href="route(child.routeName, child.params)" :style="mobileLinkStyle(isActive(child), true)">{{ child.label }}</Link>
+                        </template>
+                    </template>
+
+                    <Link v-if="user?.is_admin" :href="route('admin.dashboard')" :style="mobileLinkStyle(route().current('admin.*'))">🛡️ Beheer</Link>
+
+                    <div style="border-top: 1px solid #f4ece8; margin: 6px 0 4px"></div>
+                    <template v-if="user">
+                        <Link :href="route('messages.index')" :style="mobileLinkStyle(route().current('messages.*'))">
+                            💬 Berichten
+                            <span v-if="unreadMessages" style="font-size: 10.5px; font-weight: 700; color: #fff; background: #f28b82; border-radius: 999px; padding: 1px 7px">{{ unreadMessages > 9 ? '9+' : unreadMessages }}</span>
+                        </Link>
+                        <Link :href="route('dashboard')" :style="mobileLinkStyle(route().current('dashboard'))">👤 Hoi, {{ user.name.split(' ')[0] }}</Link>
+                        <Link :href="route('logout')" method="post" as="button" :style="mobileLinkStyle(false)">Uitloggen</Link>
+                    </template>
+                    <template v-else>
+                        <Link :href="route('login')" :style="mobileLinkStyle(false)">Inloggen</Link>
+                        <Link :href="route('register')" :style="mobileLinkStyle(false) + ';color:#fff;background:linear-gradient(135deg,#f7a8b5,#f28b82);justify-content:center'">Word lid 💛</Link>
+                    </template>
+                </div>
             </div>
         </nav>
 
@@ -352,7 +405,7 @@ const navStyle = (active) =>
             >
                 <div style="display: flex; flex-direction: column; align-items: center; text-align: center">
                     <Link :href="route('home')" style="display: flex; align-items: center; text-decoration: none">
-                        <img src="/images/logo.png" alt="MommyLovesMe.nl" style="height: 150px; width: auto; display: block" />
+                        <img src="/images/logo.png" alt="MommyLovesMe.nl" class="mlm-logo" style="height: 150px; width: auto; display: block" />
                     </Link>
                     <p style="font-family: 'Dancing Script', cursive; font-size: 19px; color: #c99ba2; margin: 14px 0 0; line-height: 1.5; max-width: 280px">
                         Een plek om te leren, te delen en te voelen dat je er niet alleen voor staat.
