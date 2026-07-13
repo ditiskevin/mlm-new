@@ -8,6 +8,9 @@
 
         <link rel="icon" type="image/png" href="/images/logo.png">
 
+        {{-- Realtime (Reverb) app key, rendered at runtime so no build-time env is needed. --}}
+        <meta name="reverb-key" content="{{ config('broadcasting.connections.reverb.key') }}">
+
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

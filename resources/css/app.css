@@ -23,11 +23,11 @@ body {
 }
 
 /* Break long words/URLs so user content can't force horizontal overflow
-   (this also lets grid "auto" tracks shrink to the container on mobile). */
-main p,
-main .mlm-break {
+   (this also lets grid/flex tracks shrink to the container on mobile).
+   overflow-wrap only affects elements whose text can wrap, so nowrap+ellipsis
+   truncation elsewhere keeps working. */
+main * {
     overflow-wrap: anywhere;
-    word-break: break-word;
 }
 
 @keyframes floaty {

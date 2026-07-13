@@ -49,6 +49,17 @@ class MessagingRealtimeTest extends TestCase
         $this->assertSame('Hoi', $payload['body']);
     }
 
+    public function test_reverb_key_is_exposed_at_runtime_for_the_browser_client(): void
+    {
+        // The client reads the key from a meta tag, so realtime needs no build args.
+        config(['broadcasting.connections.reverb.key' => 'runtime-key-123']);
+
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('name="reverb-key"', false)
+            ->assertSee('runtime-key-123', false);
+    }
+
     public function test_channel_authorization_predicate_allows_only_participants(): void
     {
         // This is the exact predicate the conversation.{id} broadcast channel

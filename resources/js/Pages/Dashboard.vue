@@ -45,6 +45,7 @@ const shortcuts = [
             <!-- Berichten -->
             <Link
                 :href="route('messages.index')"
+                class="mlm-wrap-mobile"
                 style="display: flex; align-items: center; gap: 16px; margin-top: 20px; border-radius: 22px; padding: 18px 24px; text-decoration: none; border: 1px solid #f2e1e4; background: linear-gradient(150deg, #fdf2f4, #fff)"
             >
                 <span style="font-size: 34px">💬</span>
@@ -62,6 +63,7 @@ const shortcuts = [
 
             <Link
                 v-if="suggestedAudience"
+                class="mlm-wrap-mobile"
                 :href="route('audiences.show', suggestedAudience.slug)"
                 :style="{ display: 'flex', alignItems: 'center', gap: '16px', marginTop: '20px', borderRadius: '22px', padding: '20px 24px', textDecoration: 'none', border: '1px solid #f2e7e2', background: 'linear-gradient(150deg,' + suggestedAudience.color_from + ',' + suggestedAudience.color_to + ')' }"
             >
@@ -76,6 +78,7 @@ const shortcuts = [
             <Link
                 v-if="fatherCard"
                 :href="route('father')"
+                class="mlm-wrap-mobile"
                 style="display: flex; align-items: center; gap: 18px; margin-top: 20px; border-radius: 22px; padding: 20px 24px; text-decoration: none; border: 1px solid #dcefe3; background: linear-gradient(150deg, #eef8f1, #faf8f5)"
             >
                 <span style="font-size: 40px">👨‍🍼</span>

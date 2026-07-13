@@ -55,6 +55,7 @@ MAIL_USERNAME=...
 MAIL_PASSWORD=...
 MAIL_FROM_ADDRESS=hello@your-domain.tld
 MAIL_FROM_NAME="${APP_NAME}"
+MAIL_CONTACT_TO=hello@your-domain.tld   # where contact-form messages are sent
 
 # Realtime chat (Laravel Reverb) — see the "Realtime" section below
 BROADCAST_CONNECTION=reverb
@@ -98,27 +99,19 @@ server under supervisor and nginx proxies the `/app` path to it, so no extra
 container or exposed port is needed — clients connect over the normal HTTPS
 domain (`wss://your-domain.tld/app`).
 
-Two things must be configured:
+Only **runtime env** is required (no build arguments):
 
-1. **Runtime env** (server-side publishing) — set `BROADCAST_CONNECTION=reverb`
-   and the `REVERB_APP_ID/KEY/SECRET` plus `REVERB_HOST=127.0.0.1`,
-   `REVERB_PORT=8080`, `REVERB_SCHEME=http` (the app talks to the local Reverb).
-   Generate the app credentials once with `php artisan reverb:install`.
+- Set `BROADCAST_CONNECTION=reverb` and the `REVERB_APP_ID/KEY/SECRET` plus
+  `REVERB_HOST=127.0.0.1`, `REVERB_PORT=8080`, `REVERB_SCHEME=http` (the app
+  publishes to the local Reverb). Generate the credentials once with
+  `php artisan reverb:install`.
 
-2. **Build args** (browser client) — the `VITE_REVERB_*` values are compiled into
-   the JS at image-build time, so pass them as **build arguments** in Coolify
-   (Build → Build Variables), pointing at the *public* domain over TLS:
-
-   ```
-   VITE_REVERB_APP_KEY=<same as REVERB_APP_KEY>
-   VITE_REVERB_HOST=your-domain.tld
-   VITE_REVERB_PORT=443
-   VITE_REVERB_SCHEME=https
-   ```
-
-   These must match `REVERB_APP_KEY`; if they're missing the chat silently falls
-   back to polling-free, non-live behaviour (messages still send, they just don't
-   appear until the page is reloaded).
+The **browser client configures itself at runtime**: the app key is rendered
+into a `<meta name="reverb-key">` tag from `REVERB_APP_KEY`, and the websocket
+host/port/scheme are derived from the current domain (`wss://your-domain.tld/app`,
+port 443). So a plain redeploy is enough — no `VITE_REVERB_*` build arguments to
+manage. (They still work as an optional override if you ever want to hardcode a
+separate websocket host.)
 
 ### Local development
 
