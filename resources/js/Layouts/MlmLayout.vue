@@ -1,10 +1,49 @@
 <script setup>
-import { Link, usePage } from '@inertiajs/vue3';
-import { computed, ref, watch } from 'vue';
+import { Link, router, usePage } from '@inertiajs/vue3';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
 const page = usePage();
 const user = computed(() => page.props.auth?.user);
 const unreadMessages = computed(() => page.props.auth?.unreadMessages ?? 0);
+
+// --- Notifications (bell + realtime) ---
+const notifOpen = ref(false);
+const notifications = ref([]);
+const notifUnread = ref(page.props.auth?.unreadNotifications ?? 0);
+watch(() => page.props.auth?.unreadNotifications, (v) => (notifUnread.value = v ?? 0));
+
+const loadNotifications = async () => {
+    try {
+        const { data } = await window.axios.get(route('notifications.feed'));
+        notifications.value = data.notifications;
+        notifUnread.value = data.unread;
+    } catch (e) {
+        /* ignore */
+    }
+};
+const toggleNotifs = () => {
+    notifOpen.value = !notifOpen.value;
+    if (notifOpen.value) loadNotifications();
+};
+const markAllRead = () => {
+    router.patch(route('notifications.read-all'), {}, { preserveScroll: true, preserveState: true, only: [], onSuccess: () => (notifUnread.value = 0) });
+    notifications.value = notifications.value.map((n) => ({ ...n, read: true }));
+};
+
+let notifChannel = null;
+onMounted(() => {
+    const uid = page.props.auth?.userId;
+    if (uid && window.Echo) {
+        notifChannel = window.Echo.private(`notifications.${uid}`).listen('.notification', (e) => {
+            notifUnread.value = e.unread;
+            notifications.value = [e.notification, ...notifications.value].slice(0, 12);
+        });
+    }
+});
+onBeforeUnmount(() => {
+    const uid = page.props.auth?.userId;
+    if (notifChannel && window.Echo) window.Echo.leave(`notifications.${uid}`);
+});
 
 // One-shot flash toast (success / error) shared from the server.
 const toast = ref(null);
@@ -220,6 +259,42 @@ const mobileLinkStyle = (active, indent = false) =>
                     >
 
                     <template v-if="user">
+                        <!-- Notifications bell -->
+                        <div style="position: relative" @mouseleave="notifOpen = false">
+                            <button type="button" @click="toggleNotifs" :style="navStyle(notifOpen) + ';position:relative'" title="Notificaties" aria-label="Notificaties">
+                                🔔<span v-if="notifUnread" style="position: absolute; top: 2px; right: 4px; min-width: 16px; height: 16px; font-size: 10px; font-weight: 700; color: #fff; background: #f28b82; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; padding: 0 4px">{{ notifUnread > 9 ? '9+' : notifUnread }}</span>
+                            </button>
+                            <transition enter-active-class="transition ease-out duration-150" enter-from-class="opacity-0 -translate-y-1" leave-active-class="transition ease-in duration-100" leave-to-class="opacity-0 -translate-y-1">
+                                <div v-show="notifOpen" style="position: absolute; top: 100%; right: 0; padding-top: 8px; z-index: 60; width: 340px; max-width: 92vw">
+                                    <div style="background: #fff; border: 1px solid #f1e7e2; border-radius: 16px; box-shadow: 0 16px 36px rgba(180, 150, 150, 0.2); overflow: hidden">
+                                        <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid #f4ece8">
+                                            <span style="font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 14px; color: #473537">Notificaties</span>
+                                            <button v-if="notifUnread" @click="markAllRead" style="font-size: 12px; color: #c0566b; font-weight: 600; background: none; border: none; cursor: pointer">Alles gelezen</button>
+                                        </div>
+                                        <div style="max-height: 380px; overflow-y: auto">
+                                            <component
+                                                :is="n.url ? 'a' : 'div'"
+                                                v-for="n in notifications"
+                                                :key="n.id"
+                                                :href="n.url || undefined"
+                                                :style="{ display: 'flex', gap: '11px', alignItems: 'flex-start', padding: '12px 16px', borderBottom: '1px solid #f7f1ee', textDecoration: 'none', background: n.read ? '#fff' : '#fdf2f4' }"
+                                            >
+                                                <span style="font-size: 19px; flex: none">{{ n.icon }}</span>
+                                                <div style="flex: 1; min-width: 0">
+                                                    <div style="font-family: 'Quicksand', sans-serif; font-weight: 600; font-size: 13.5px; color: #473537; line-height: 1.35">{{ n.title }}</div>
+                                                    <div v-if="n.body" style="font-size: 12.5px; color: #8a7d78; line-height: 1.4">{{ n.body }}</div>
+                                                    <div style="font-size: 11px; color: #b5a8a3; margin-top: 3px">{{ n.when }}</div>
+                                                </div>
+                                                <span v-if="!n.read" style="flex: none; width: 8px; height: 8px; border-radius: 50%; background: #f28b82; margin-top: 5px"></span>
+                                            </component>
+                                            <div v-if="!notifications.length" style="padding: 30px 16px; text-align: center; color: #9a8d88; font-size: 13.5px">Nog geen notificaties 🌿</div>
+                                        </div>
+                                        <Link :href="route('notifications.index')" @click="notifOpen = false" style="display: block; text-align: center; padding: 11px; font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 13px; color: #c0566b; background: #faf4f1; text-decoration: none">Alle notificaties</Link>
+                                    </div>
+                                </div>
+                            </transition>
+                        </div>
+
                         <Link
                             :href="route('messages.index')"
                             :style="navStyle(route().current('messages.*')) + ';position:relative'"
@@ -303,6 +378,10 @@ const mobileLinkStyle = (active, indent = false) =>
 
                     <div style="border-top: 1px solid #f4ece8; margin: 6px 0 4px"></div>
                     <template v-if="user">
+                        <Link :href="route('notifications.index')" :style="mobileLinkStyle(route().current('notifications.*'))">
+                            🔔 Notificaties
+                            <span v-if="notifUnread" style="font-size: 10.5px; font-weight: 700; color: #fff; background: #f28b82; border-radius: 999px; padding: 1px 7px">{{ notifUnread > 9 ? '9+' : notifUnread }}</span>
+                        </Link>
                         <Link :href="route('messages.index')" :style="mobileLinkStyle(route().current('messages.*'))">
                             💬 Berichten
                             <span v-if="unreadMessages" style="font-size: 10.5px; font-weight: 700; color: #fff; background: #f28b82; border-radius: 999px; padding: 1px 7px">{{ unreadMessages > 9 ? '9+' : unreadMessages }}</span>

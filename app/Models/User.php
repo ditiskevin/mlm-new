@@ -157,6 +157,16 @@ class User extends Authenticatable
             ->withTimestamps();
     }
 
+    public function notifications(): HasMany
+    {
+        return $this->hasMany(Notification::class);
+    }
+
+    public function unreadNotificationsCount(): int
+    {
+        return $this->notifications()->whereNull('read_at')->count();
+    }
+
     /**
      * Number of conversations that have a message from someone else
      * newer than this user's last_read_at (or never read).

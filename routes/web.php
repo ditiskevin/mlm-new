@@ -93,6 +93,13 @@ Route::middleware('auth')->group(function () {
     Route::post('/meldingen', [\App\Http\Controllers\ReportController::class, 'store'])
         ->middleware('throttle:20,1')->name('reports.store');
 
+    // Notificaties
+    Route::get('/notificaties', [\App\Http\Controllers\NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notificaties/feed', [\App\Http\Controllers\NotificationController::class, 'feed'])->name('notifications.feed');
+    Route::patch('/notificaties/gelezen', [\App\Http\Controllers\NotificationController::class, 'markAllRead'])->name('notifications.read-all');
+    Route::patch('/notificaties/{notification}/gelezen', [\App\Http\Controllers\NotificationController::class, 'markRead'])->name('notifications.read');
+    Route::delete('/notificaties/{notification}', [\App\Http\Controllers\NotificationController::class, 'destroy'])->name('notifications.destroy');
+
     // Privéberichten (chat)
     Route::get('/berichten', [\App\Http\Controllers\MessageController::class, 'index'])->name('messages.index');
     Route::post('/berichten/start/{user}', [\App\Http\Controllers\MessageController::class, 'startWith'])->name('messages.start');

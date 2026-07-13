@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Events\MessageSent;
 use App\Models\Conversation;
 use App\Models\User;
+use App\Support\Notifier;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -70,6 +71,20 @@ class MessageController extends Controller
         // Push to the conversation channel in real time (ShouldBroadcastNow).
         // The sender already has the message locally and dedupes by id.
         MessageSent::dispatch($message);
+
+        // Notify the other participant(s) about the new message.
+        $conversation->participants()
+            ->where('users.id', '!=', $user->id)
+            ->get()
+            ->each(fn (User $other) => Notifier::send(
+                recipient: $other,
+                type: 'message',
+                title: $user->name.' stuurde je een bericht',
+                body: \Illuminate\Support\Str::limit($data['body'], 60),
+                url: route('messages.show', $conversation),
+                icon: '💬',
+                actor: $user,
+            ));
 
         return back();
     }

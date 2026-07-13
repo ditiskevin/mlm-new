@@ -37,6 +37,8 @@ class HandleInertiaRequests extends Middleware
                 'user' => $request->user(),
                 // Lazily evaluated so it only runs when a page needs it.
                 'unreadMessages' => fn () => $request->user()?->unreadConversationsCount() ?? 0,
+                'unreadNotifications' => fn () => $request->user()?->unreadNotificationsCount() ?? 0,
+                'userId' => fn () => $request->user()?->id,
             ],
             'audiences' => Schema::hasTable('audiences')
                 ? Audience::orderBy('position')->get(['slug', 'name', 'emoji'])
