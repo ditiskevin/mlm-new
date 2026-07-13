@@ -30,6 +30,16 @@ const markAllRead = () => {
     notifications.value = notifications.value.map((n) => ({ ...n, read: true }));
 };
 
+const openNotification = (n) => {
+    if (!n.read) {
+        n.read = true;
+        notifUnread.value = Math.max(0, notifUnread.value - 1);
+        router.patch(route('notifications.read', n.id), {}, { preserveScroll: true, preserveState: true, only: [] });
+    }
+    notifOpen.value = false;
+    if (n.url) router.visit(n.url);
+};
+
 let notifChannel = null;
 onMounted(() => {
     const uid = page.props.auth?.userId;
@@ -90,6 +100,7 @@ const navItems = computed(() => [
         label: 'Community',
         children: [
             { label: 'Tijdlijn & groepen', routeName: 'community' },
+            { label: 'Leden', routeName: 'members.index', match: 'members.index' },
             { label: 'Forum', routeName: 'forum.index', match: 'forum.*' },
             { label: 'Marktplaats', routeName: 'marketplace.index', match: 'marketplace.*' },
             { label: 'Oppas vinden', routeName: 'babysitters.index', match: 'babysitters.*' },
@@ -272,12 +283,12 @@ const mobileLinkStyle = (active, indent = false) =>
                                             <button v-if="notifUnread" @click="markAllRead" style="font-size: 12px; color: #c0566b; font-weight: 600; background: none; border: none; cursor: pointer">Alles gelezen</button>
                                         </div>
                                         <div style="max-height: 380px; overflow-y: auto">
-                                            <component
-                                                :is="n.url ? 'a' : 'div'"
+                                            <button
                                                 v-for="n in notifications"
                                                 :key="n.id"
-                                                :href="n.url || undefined"
-                                                :style="{ display: 'flex', gap: '11px', alignItems: 'flex-start', padding: '12px 16px', borderBottom: '1px solid #f7f1ee', textDecoration: 'none', background: n.read ? '#fff' : '#fdf2f4' }"
+                                                type="button"
+                                                @click="openNotification(n)"
+                                                :style="{ width: '100%', textAlign: 'left', border: 'none', cursor: 'pointer', display: 'flex', gap: '11px', alignItems: 'flex-start', padding: '12px 16px', borderBottom: '1px solid #f7f1ee', background: n.read ? '#fff' : '#fdf2f4' }"
                                             >
                                                 <span style="font-size: 19px; flex: none">{{ n.icon }}</span>
                                                 <div style="flex: 1; min-width: 0">
@@ -286,7 +297,7 @@ const mobileLinkStyle = (active, indent = false) =>
                                                     <div style="font-size: 11px; color: #b5a8a3; margin-top: 3px">{{ n.when }}</div>
                                                 </div>
                                                 <span v-if="!n.read" style="flex: none; width: 8px; height: 8px; border-radius: 50%; background: #f28b82; margin-top: 5px"></span>
-                                            </component>
+                                            </button>
                                             <div v-if="!notifications.length" style="padding: 30px 16px; text-align: center; color: #9a8d88; font-size: 13.5px">Nog geen notificaties 🌿</div>
                                         </div>
                                         <Link :href="route('notifications.index')" @click="notifOpen = false" style="display: block; text-align: center; padding: 11px; font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 13px; color: #c0566b; background: #faf4f1; text-decoration: none">Alle notificaties</Link>

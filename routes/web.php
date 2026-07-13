@@ -26,6 +26,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/zwangerschap', [CalendarController::class, 'index'])->name('calendar');
 Route::get('/community', [CommunityController::class, 'index'])->name('community');
+Route::get('/community/groepen/{group}', [CommunityController::class, 'showGroup'])->whereNumber('group')->name('community.groups.show');
 Route::get('/checklists', [ChecklistController::class, 'index'])->name('checklists');
 Route::get('/hoera-zwanger', [RevealController::class, 'index'])->name('reveal');
 Route::get('/aanstaande-vader', [FatherController::class, 'index'])->name('father');
@@ -40,8 +41,11 @@ Route::middleware('auth')->group(function () {
 });
 Route::get('/blog/{article}', [BlogController::class, 'show'])->name('blog.show');
 
-// Ledenprofielen (publiek)
+// Ledenlijst + profielen (publiek)
+Route::get('/leden', [\App\Http\Controllers\MemberController::class, 'index'])->name('members.index');
 Route::get('/leden/{user}', [\App\Http\Controllers\MemberController::class, 'show'])->name('members.show');
+Route::get('/leden/{user}/{type}', [\App\Http\Controllers\MemberController::class, 'connections'])
+    ->whereIn('type', ['volgers', 'volgend'])->name('members.connections');
 
 // Contact
 Route::get('/contact', [ContactController::class, 'index'])->name('contact');

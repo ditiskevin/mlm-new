@@ -13,8 +13,13 @@ defineProps({
     canMessage: { type: Boolean, default: false },
     isFollowing: { type: Boolean, default: false },
     isBlocked: { type: Boolean, default: false },
+    areFriends: { type: Boolean, default: false },
+    connections: { type: Object, default: () => ({ followers: 0, following: 0, friends: 0, friendsPreview: [] }) },
     badges: { type: Array, default: () => [] },
 });
+
+const miniAvatar = (color) =>
+    `width:38px;height:38px;border-radius:50%;flex:none;background:${color};display:flex;align-items:center;justify-content:center;font-family:'Poppins',sans-serif;font-weight:700;color:#fff;font-size:15px`;
 
 const badge = (text, color, bg) => ({ text, color, bg });
 </script>
@@ -31,6 +36,7 @@ const badge = (text, color, bg) => ({ text, color, bg });
 
                     <div style="display: flex; align-items: center; gap: 10px; margin-top: 12px; flex-wrap: wrap">
                         <h1 style="font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 27px; color: #473537; margin: 0; letter-spacing: -0.4px">{{ member.name }}</h1>
+                        <span v-if="areFriends" style="font-size: 11.5px; font-weight: 600; color: #5e9e78; background: #e4f3e9; border-radius: 999px; padding: 4px 11px">🤝 Vrienden</span>
                         <span v-if="member.is_admin" style="font-size: 11.5px; font-weight: 600; color: #c0566b; background: #fce7eb; border-radius: 999px; padding: 4px 11px">🛡️ Beheerder</span>
                     </div>
 
@@ -48,12 +54,33 @@ const badge = (text, color, bg) => ({ text, color, bg });
                     <p v-if="member.bio" style="font-size: 15px; line-height: 1.7; color: #5d514d; margin: 14px 0 0; white-space: pre-line">{{ member.bio }}</p>
                     <div v-if="member.member_since" style="font-size: 12.5px; color: #b5a8a3; margin-top: 12px">Lid sinds {{ member.member_since }}</div>
 
-                    <!-- Stats -->
-                    <div style="display: flex; gap: 28px; margin: 18px 0 4px; border-top: 1px solid #f4ece8; padding-top: 16px">
-                        <div v-for="s in member.stats" :key="s.label">
+                    <!-- Stats + connections -->
+                    <div style="display: flex; flex-wrap: wrap; gap: 22px; margin: 18px 0 4px; border-top: 1px solid #f4ece8; padding-top: 16px">
+                        <Link :href="route('members.connections', [member.id, 'volgers'])" style="text-decoration: none">
+                            <span style="font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 18px; color: #473537">{{ connections.followers }}</span>
+                            <span style="font-size: 13px; color: #9a8d88; margin-left: 6px">volgers</span>
+                        </Link>
+                        <Link :href="route('members.connections', [member.id, 'volgend'])" style="text-decoration: none">
+                            <span style="font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 18px; color: #473537">{{ connections.following }}</span>
+                            <span style="font-size: 13px; color: #9a8d88; margin-left: 6px">volgend</span>
+                        </Link>
+                        <div>
+                            <span style="font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 18px; color: #5e9e78">{{ connections.friends }}</span>
+                            <span style="font-size: 13px; color: #9a8d88; margin-left: 6px">vrienden</span>
+                        </div>
+                        <div v-for="s in member.stats.filter((x) => x.label !== 'volgers')" :key="s.label">
                             <span style="font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 18px; color: #473537">{{ s.value }}</span>
                             <span style="font-size: 13px; color: #9a8d88; margin-left: 6px">{{ s.label }}</span>
                         </div>
+                    </div>
+
+                    <!-- Friends preview -->
+                    <div v-if="connections.friendsPreview.length" style="display: flex; align-items: center; gap: 8px; margin-top: 14px; flex-wrap: wrap">
+                        <span style="font-size: 12.5px; color: #9a8d88; font-weight: 600; margin-right: 4px">Vrienden:</span>
+                        <Link v-for="f in connections.friendsPreview" :key="f.id" :href="route('members.show', f.id)" :title="f.name">
+                            <img v-if="f.avatar_url" :src="f.avatar_url" alt="" style="width: 38px; height: 38px; border-radius: 50%; object-fit: cover" />
+                            <span v-else :style="miniAvatar(f.avatar_color)">{{ f.initial }}</span>
+                        </Link>
                     </div>
 
                     <!-- Actions -->

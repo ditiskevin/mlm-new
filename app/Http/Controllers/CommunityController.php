@@ -217,6 +217,52 @@ class CommunityController extends Controller
         return back();
     }
 
+    public function showGroup(Request $request, CommunityGroup $group): Response
+    {
+        $user = $request->user();
+        $following = $user ? $user->followedGroups()->whereKey($group->id)->exists() : false;
+
+        $posts = Post::where('community_group_id', $group->id)
+            ->withCount('likers')
+            ->latest()
+            ->take(30)
+            ->get()
+            ->map(fn (Post $p) => [
+                'id' => $p->id,
+                'author_id' => $p->user_id,
+                'author_name' => $p->author_name,
+                'initial' => mb_substr($p->author_name, 0, 1),
+                'avatar_color' => $p->avatar_color,
+                'body' => $p->body,
+                'when' => $p->created_at->diffForHumans(),
+                'like_count' => $p->base_likes + $p->likers_count,
+            ]);
+
+        $members = $group->followers()->latest('community_group_user.created_at')->take(24)->get()->map(fn (User $u) => [
+            'id' => $u->id,
+            'name' => $u->name,
+            'initial' => mb_substr($u->name, 0, 1),
+            'avatar_color' => $u->avatar_color ?: '#F7A8B5',
+            'avatar_url' => $u->avatar_url,
+        ]);
+
+        return Inertia::render('Community/Group', [
+            'group' => [
+                'id' => $group->id,
+                'name' => $group->name,
+                'description' => $group->description,
+                'members' => $group->members,
+                'color_from' => $group->color_from,
+                'color_to' => $group->color_to,
+                'following' => $following,
+                'is_owner' => $user && $group->user_id === $user->id,
+                'owner' => $group->user?->name,
+            ],
+            'posts' => $posts,
+            'members_preview' => $members,
+        ]);
+    }
+
     public function storeComment(Request $request, Post $post): RedirectResponse
     {
         $data = $request->validate([

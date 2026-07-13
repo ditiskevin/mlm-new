@@ -138,9 +138,9 @@ const likeBtnStyle = (isLiked) =>
                         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px"><span style="font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 15px; color: #473537">Groepen</span><span style="font-size: 12px; color: #c0566b; font-weight: 600">Alle</span></div>
                         <div style="display: grid; gap: 12px">
                             <div v-for="g in groups" :key="g.id" style="min-width: 0; display: flex; align-items: flex-start; gap: 12px">
-                                <span :style="{ width: '40px', height: '40px', borderRadius: '13px', flex: 'none', background: 'linear-gradient(135deg,' + g.color_from + ',' + g.color_to + ')' }"></span>
+                                <Link :href="route('community.groups.show', g.id)" :style="{ width: '40px', height: '40px', borderRadius: '13px', flex: 'none', background: 'linear-gradient(135deg,' + g.color_from + ',' + g.color_to + ')' }"></Link>
                                 <div style="flex: 1; min-width: 0">
-                                    <div style="font-weight: 600; font-size: 14px; color: #473537; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{ g.name }}</div>
+                                    <Link :href="route('community.groups.show', g.id)" style="display: block; font-weight: 600; font-size: 14px; color: #473537; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-decoration: none">{{ g.name }}</Link>
                                     <div style="font-size: 12px; color: #9a8d88">{{ g.members }} leden<span v-if="g.is_owner"> · jouw groep</span></div>
                                     <div v-if="g.description" style="font-size: 12px; color: #8a7d78; line-height: 1.4; margin-top: 3px">{{ g.description }}</div>
                                     <button v-if="g.is_owner" @click="deleteGroup(g)" style="font-size: 11.5px; font-weight: 600; color: #b4574e; background: none; border: none; cursor: pointer; padding: 4px 0 0">Verwijderen</button>
