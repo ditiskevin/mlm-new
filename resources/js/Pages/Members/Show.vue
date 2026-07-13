@@ -40,6 +40,8 @@ const badge = (text, color, bg) => ({ text, color, bg });
                         <span v-if="member.gender" style="font-size: 12px; font-weight: 600; color: #7a6c67; background: #f3ece9; border-radius: 999px; padding: 4px 11px">{{ member.gender }}</span>
                     </div>
 
+                    <div v-if="member.username" style="font-size: 13.5px; color: #c0566b; font-weight: 600; margin-top: 4px">@{{ member.username }}</div>
+
                     <BadgeList :badges="badges" style="margin-top: 12px" />
 
                     <div v-if="member.role" style="font-size: 13.5px; color: #9a8d88; margin-top: 8px">{{ member.role }}</div>

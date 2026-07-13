@@ -31,6 +31,7 @@ const user = usePage().props.auth.user;
 
 const form = useForm({
     name: user.name,
+    username: user.username ?? '',
     email: user.email,
     parent_type: user.parent_type ?? 'ouder',
     gender: user.gender ?? null,
@@ -120,6 +121,16 @@ const typeChipStyle = (active) =>
                 />
 
                 <InputError class="mt-2" :message="form.errors.name" />
+            </div>
+
+            <div>
+                <InputLabel for="username" value="Gebruikersnaam (@handle)" />
+                <div class="mt-1 flex items-center gap-1">
+                    <span style="color: #c0566b; font-weight: 600">@</span>
+                    <TextInput id="username" type="text" class="block w-full" v-model="form.username" placeholder="bijv. sanne" autocomplete="off" />
+                </div>
+                <p style="font-size: 12px; color: #a99b96; margin-top: 4px">Andere leden kunnen je taggen met @{{ form.username || 'jouwnaam' }}. Alleen letters, cijfers en _.</p>
+                <InputError class="mt-2" :message="form.errors.username" />
             </div>
 
             <div>

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Article;
 use App\Models\ArticleComment;
+use App\Support\Mentions;
 use App\Support\Notifier;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -39,6 +40,8 @@ class ArticleCommentController extends Controller
                 actor: $user,
             );
         }
+
+        Mentions::notify($data['body'], $user, route('blog.show', $article->slug), 'een reactie');
 
         return back();
     }

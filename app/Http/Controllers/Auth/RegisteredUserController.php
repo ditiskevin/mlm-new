@@ -53,6 +53,9 @@ class RegisteredUserController extends Controller
             'parenting_role' => $request->parenting_role,
         ]);
 
+        $user->username = User::uniqueUsername($user->name);
+        $user->save();
+
         \App\Support\BadgeService::award($user, 'welkom');
 
         event(new Registered($user));

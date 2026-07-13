@@ -11,6 +11,7 @@ use App\Models\Post;
 use App\Models\Reaction;
 use App\Models\User;
 use App\Support\BadgeService;
+use App\Support\Mentions;
 use App\Support\Notifier;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -211,6 +212,7 @@ class CommunityController extends Controller
         ]);
 
         BadgeService::evaluate($user);
+        Mentions::notify($data['body'], $user, route('community'), 'een bericht');
 
         return back();
     }
@@ -242,6 +244,8 @@ class CommunityController extends Controller
                 actor: $user,
             );
         }
+
+        Mentions::notify($data['body'], $user, route('community'), 'een reactie');
 
         return back();
     }

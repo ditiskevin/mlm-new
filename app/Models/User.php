@@ -15,7 +15,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 
-#[Fillable(['name', 'email', 'password', 'role_label', 'parent_type', 'gender', 'parenting_role', 'bio', 'avatar_color', 'avatar_path', 'is_expecting', 'due_date', 'children_count'])]
+#[Fillable(['name', 'username', 'email', 'password', 'role_label', 'parent_type', 'gender', 'parenting_role', 'bio', 'avatar_color', 'avatar_path', 'is_expecting', 'due_date', 'children_count'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -45,6 +45,22 @@ class User extends Authenticatable
 
     /** Roles for which we surface the father-focused content & checklist. */
     public const FATHER_ROLES = ['vader', 'aanstaande_ouder'];
+
+    /**
+     * Build a unique @handle from a display name (letters/digits/underscore).
+     */
+    public static function uniqueUsername(string $name, ?int $ignoreId = null): string
+    {
+        $base = trim(preg_replace('/[^a-z0-9]+/', '', strtolower(\Illuminate\Support\Str::ascii($name)))) ?: 'lid';
+        $base = mb_substr($base, 0, 20);
+        $handle = $base;
+        $i = 1;
+        while (static::where('username', $handle)->when($ignoreId, fn ($q) => $q->whereKeyNot($ignoreId))->exists()) {
+            $handle = $base.(++$i);
+        }
+
+        return $handle;
+    }
 
     /** Per-request memoised key => label map. */
     protected static ?array $parentTypeMap = null;

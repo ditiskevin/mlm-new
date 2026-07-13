@@ -37,6 +37,7 @@ class MemberController extends Controller
             'member' => [
                 'id' => $user->id,
                 'name' => $user->name,
+                'username' => $user->username,
                 'initial' => mb_substr($user->name, 0, 1),
                 'avatar_color' => $user->avatar_color ?: '#F7A8B5',
                 'avatar_url' => $user->avatar_url,

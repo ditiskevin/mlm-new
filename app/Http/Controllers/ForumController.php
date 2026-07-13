@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ForumCategory;
 use App\Models\ForumTopic;
+use App\Support\Mentions;
 use App\Support\Notifier;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -180,6 +181,8 @@ class ForumController extends Controller
                 actor: $user,
             );
         }
+
+        Mentions::notify($data['body'], $user, route('forum.topic', $topic->slug), 'een forumreactie');
 
         return back();
     }
