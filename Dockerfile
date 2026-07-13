@@ -56,19 +56,12 @@ FROM php:8.3-fpm-alpine AS runtime
 
 # PHP extensions via the install helper (handles build deps automatically)
 COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
-RUN install-php-extensions \
-        pdo_mysql \
-        pdo_pgsql \
-        pgsql \
-        pdo_sqlite \
-        mbstring \
-        bcmath \
-        gd \
-        zip \
-        intl \
-        exif \
-        pcntl \
-        opcache
+# Retry to survive transient Alpine-mirror / DNS hiccups on the build host;
+# fails the build only if every attempt fails.
+RUN i=0; until install-php-extensions pdo_mysql pdo_pgsql pgsql pdo_sqlite mbstring bcmath gd zip intl exif pcntl opcache; do \
+        i=$((i+1)); [ "$i" -ge 5 ] && echo "install-php-extensions failed after $i attempts" && exit 1; \
+        echo "install-php-extensions retry $i in 8s..."; sleep 8; \
+    done
 
 # System packages: nginx + supervisor
 RUN apk add --no-cache nginx supervisor && \
