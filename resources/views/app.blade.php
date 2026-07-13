@@ -7,6 +7,13 @@
         <title inertia>{{ config('app.name', 'Laravel') }}</title>
 
         <link rel="icon" type="image/png" href="/images/logo.png">
+        <link rel="apple-touch-icon" href="/images/logo.png">
+
+        {{-- Installable PWA --}}
+        <link rel="manifest" href="/manifest.webmanifest">
+        <meta name="theme-color" content="#f7a8b5">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-title" content="MommyLovesMe">
 
         {{-- Realtime (Reverb) app key, rendered at runtime so no build-time env is needed. --}}
         <meta name="reverb-key" content="{{ config('broadcasting.connections.reverb.key') }}">
@@ -23,5 +30,10 @@
     </head>
     <body class="font-sans antialiased">
         @inertia
+        <script>
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
+            }
+        </script>
     </body>
 </html>

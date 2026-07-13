@@ -1,7 +1,7 @@
 <script setup>
 import MlmLayout from '@/Layouts/MlmLayout.vue';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
-import { nextTick, onBeforeUnmount, ref, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
 
 const props = defineProps({
     conversations: { type: Array, default: () => [] },
@@ -25,10 +25,15 @@ watch(() => props.active?.messages?.length, scrollToBottom);
 
 // --- Realtime via Laravel Reverb / Echo ---
 let channelId = null;
+const otherLastRead = ref(props.active?.other_last_read ?? null);
+const otherOnline = ref(false);
+const otherTyping = ref(false);
+let typingTimer = null;
 
 const leaveChannel = () => {
     if (channelId && window.Echo) {
         window.Echo.leave(`conversation.${channelId}`);
+        window.Echo.leave(`chat.${channelId}`); // presence
         channelId = null;
     }
 };
@@ -37,21 +42,60 @@ const subscribe = (id) => {
     if (!window.Echo || !id || id === channelId) return;
     leaveChannel();
     channelId = id;
-    window.Echo.private(`conversation.${id}`).listen('.message.sent', (e) => {
-        // Ignore our own echo; the local copy already shows it.
-        if (e.sender_id === currentUserId) return;
-        // Dedupe by id, then append for an instant feel.
-        if (props.active && !props.active.messages.some((m) => m.id === e.id)) {
-            props.active.messages.push({ id: e.id, body: e.body, mine: false, author: e.author, when: e.when });
-            scrollToBottom();
-        }
-        // Reconcile read state + sidebar previews + the unread nav badge.
-        router.reload({ only: ['conversations', 'auth'], preserveScroll: true });
-    });
+    otherLastRead.value = props.active?.other_last_read ?? null;
+    otherOnline.value = false;
+    otherTyping.value = false;
+
+    window.Echo.private(`conversation.${id}`)
+        .listen('.message.sent', (e) => {
+            if (e.sender_id === currentUserId) return;
+            if (props.active && !props.active.messages.some((m) => m.id === e.id)) {
+                props.active.messages.push({ id: e.id, body: e.body, mine: false, author: e.author, when: e.when, at: new Date().toISOString() });
+                scrollToBottom();
+            }
+            router.reload({ only: ['active', 'conversations', 'auth'], preserveScroll: true });
+        })
+        .listen('.conversation.read', (e) => {
+            // The other participant read the thread — show our "gelezen" receipt.
+            if (e.reader_id !== currentUserId) otherLastRead.value = e.read_at;
+        });
+
+    // Presence: online status + typing indicator.
+    window.Echo.join(`chat.${id}`)
+        .here((members) => (otherOnline.value = members.some((m) => m.id !== currentUserId)))
+        .joining((m) => {
+            if (m.id !== currentUserId) otherOnline.value = true;
+        })
+        .leaving((m) => {
+            if (m.id !== currentUserId) {
+                otherOnline.value = false;
+                otherTyping.value = false;
+            }
+        })
+        .listenForWhisper('typing', (e) => {
+            if (e.id === currentUserId) return;
+            otherTyping.value = true;
+            clearTimeout(typingTimer);
+            typingTimer = setTimeout(() => (otherTyping.value = false), 2500);
+        });
+};
+
+const whisperTyping = () => {
+    if (window.Echo && channelId) {
+        window.Echo.join(`chat.${channelId}`).whisper('typing', { id: currentUserId });
+    }
 };
 
 watch(() => props.active?.id, (id) => (id ? subscribe(id) : leaveChannel()), { immediate: true });
+watch(() => props.active?.other_last_read, (v) => (otherLastRead.value = v ?? null));
 onBeforeUnmount(leaveChannel);
+
+// The id of my most recent message (to attach the read-receipt to).
+const lastMineId = computed(() => {
+    const mine = (props.active?.messages ?? []).filter((m) => m.mine);
+    return mine.length ? mine[mine.length - 1].id : null;
+});
+const isRead = (m) => m.mine && m.id === lastMineId.value && otherLastRead.value && m.at && new Date(m.at) <= new Date(otherLastRead.value);
 
 const send = () => {
     if (!form.body.trim() || !props.active) return;
@@ -121,7 +165,13 @@ const openConversation = (id) => router.get(route('messages.show', id), {}, { pr
                         <div style="display: flex; align-items: center; gap: 12px; padding: 16px 22px; border-bottom: 1px solid #f4ece8">
                             <img v-if="active.other.avatar_url" :src="active.other.avatar_url" alt="" style="width: 42px; height: 42px; border-radius: 50%; object-fit: cover" />
                             <span v-else :style="{ width: '42px', height: '42px', borderRadius: '50%', background: active.other.avatar_color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Poppins, sans-serif', fontWeight: 700, color: '#fff', fontSize: '16px' }">{{ active.other.initial }}</span>
-                            <span style="font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 16px; color: #473537">{{ active.other.name }}</span>
+                            <div style="flex: 1; min-width: 0">
+                                <div style="font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 16px; color: #473537">{{ active.other.name }}</div>
+                                <div style="font-size: 12px; height: 15px; color: #8a7d78">
+                                    <span v-if="otherTyping" style="color: #c0566b; font-weight: 600">aan het typen…</span>
+                                    <span v-else-if="otherOnline" style="color: #5fa07c; font-weight: 600">● online</span>
+                                </div>
+                            </div>
                         </div>
 
                         <div ref="threadEl" style="flex: 1; overflow-y: auto; padding: 20px 22px; display: flex; flex-direction: column; gap: 10px; max-height: 420px">
@@ -141,7 +191,7 @@ const openConversation = (id) => router.get(route('messages.show', id), {}, { pr
                                     }"
                                 >
                                     {{ m.body }}
-                                    <div :style="{ fontSize: '10.5px', marginTop: '4px', textAlign: 'right', color: m.mine ? 'rgba(255,255,255,0.8)' : '#b5a8a3' }">{{ m.when }}</div>
+                                    <div :style="{ fontSize: '10.5px', marginTop: '4px', textAlign: 'right', color: m.mine ? 'rgba(255,255,255,0.8)' : '#b5a8a3' }">{{ m.when }}<span v-if="isRead(m)"> · ✓ Gelezen</span></div>
                                 </div>
                             </div>
                             <div v-if="!active.messages.length" style="margin: auto; text-align: center; color: #b5a8a3; font-size: 14px">Zeg hallo 👋</div>
@@ -150,6 +200,7 @@ const openConversation = (id) => router.get(route('messages.show', id), {}, { pr
                         <form @submit.prevent="send" style="display: flex; gap: 10px; padding: 14px 18px; border-top: 1px solid #f4ece8">
                             <input
                                 v-model="form.body"
+                                @input="whisperTyping"
                                 placeholder="Schrijf een bericht…"
                                 style="flex: 1; min-width: 0; background: #faf6f3; border: 1px solid #f1e7e2; border-radius: 999px; padding: 12px 18px; color: #5d514d; font-family: 'Quicksand', sans-serif; font-size: 14px; outline: none"
                             />

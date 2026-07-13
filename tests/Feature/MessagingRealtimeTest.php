@@ -60,6 +60,22 @@ class MessagingRealtimeTest extends TestCase
             ->assertSee('runtime-key-123', false);
     }
 
+    public function test_opening_a_conversation_broadcasts_a_read_receipt(): void
+    {
+        \Illuminate\Support\Facades\Event::fake([\App\Events\ConversationRead::class]);
+
+        $a = User::factory()->create();
+        $b = User::factory()->create();
+        $conversation = Conversation::between($a, $b);
+        $conversation->messages()->create(['user_id' => $b->id, 'body' => 'Hoi a']);
+
+        // a opens the thread -> marks read -> broadcasts ConversationRead
+        $this->actingAs($a)->get("/berichten/{$conversation->id}")->assertOk();
+
+        \Illuminate\Support\Facades\Event::assertDispatched(\App\Events\ConversationRead::class,
+            fn ($e) => $e->conversationId === $conversation->id && $e->readerId === $a->id);
+    }
+
     public function test_channel_authorization_predicate_allows_only_participants(): void
     {
         // This is the exact predicate the conversation.{id} broadcast channel

@@ -16,3 +16,10 @@ Broadcast::channel('notifications.{id}', function ($user, $id) {
 Broadcast::channel('conversation.{conversationId}', function ($user, $conversationId) {
     return Conversation::find($conversationId)?->hasParticipant($user) ?? false;
 });
+
+// Presence channel for online status + typing indicators within a conversation.
+Broadcast::channel('chat.{conversationId}', function ($user, $conversationId) {
+    return (Conversation::find($conversationId)?->hasParticipant($user) ?? false)
+        ? ['id' => $user->id, 'name' => $user->name]
+        : null;
+});

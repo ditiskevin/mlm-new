@@ -103,7 +103,11 @@ class MessageController extends Controller
 
     private function markRead(Conversation $conversation, User $user): void
     {
-        $conversation->participants()->updateExistingPivot($user->id, ['last_read_at' => now()]);
+        $now = now();
+        $conversation->participants()->updateExistingPivot($user->id, ['last_read_at' => $now]);
+
+        // Let the other participant's open thread show a "gelezen" receipt.
+        \App\Events\ConversationRead::dispatch($conversation->id, $user->id, $now->toIso8601String());
     }
 
     /**
@@ -141,21 +145,25 @@ class MessageController extends Controller
     {
         $conversation->load(['participants:id,name,avatar_color,avatar_path', 'messages.sender:id,name,avatar_color']);
         $other = $conversation->participants->firstWhere('id', '!=', $user->id);
+        $otherLastRead = $other?->pivot?->last_read_at;
 
         return [
             'id' => $conversation->id,
             'other' => [
+                'id' => $other?->id,
                 'name' => $other?->name ?? 'Onbekend lid',
                 'avatar_color' => $other?->avatar_color ?? '#F7A8B5',
                 'avatar_url' => $other?->avatar_url,
                 'initial' => mb_substr($other?->name ?? '?', 0, 1),
             ],
+            'other_last_read' => $otherLastRead ? \Illuminate\Support\Carbon::parse($otherLastRead)->toIso8601String() : null,
             'messages' => $conversation->messages->map(fn ($m) => [
                 'id' => $m->id,
                 'body' => $m->body,
                 'mine' => $m->user_id === $user->id,
                 'author' => $m->sender?->name,
                 'when' => $m->created_at->diffForHumans(),
+                'at' => $m->created_at->toIso8601String(),
             ])->values(),
         ];
     }
