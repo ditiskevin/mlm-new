@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ForumReply;
+use App\Support\BadgeService;
 use App\Support\Notifier;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -41,6 +42,10 @@ class ForumInteractionController extends Controller
                 '🏅',
                 $request->user(),
             );
+
+            if ($reply->user) {
+                BadgeService::award($reply->user, 'behulpzaam');
+            }
         }
 
         return back();

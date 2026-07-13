@@ -58,6 +58,13 @@ class MemberController extends Controller
             'isSelf' => $viewer && $viewer->id === $user->id,
             'canMessage' => $viewer && $viewer->id !== $user->id,
             'isFollowing' => $isFollowing,
+            'isBlocked' => $viewer && $viewer->id !== $user->id ? $viewer->hasBlocked($user) : false,
+            'badges' => $user->badges()->orderBy('name')->get()->map(fn (\App\Models\Badge $b) => [
+                'key' => $b->key,
+                'name' => $b->name,
+                'emoji' => $b->emoji,
+                'description' => $b->description,
+            ]),
         ]);
     }
 }

@@ -30,6 +30,13 @@ class DashboardController extends Controller
             ] : null,
             // Surface the father journey when the member identifies as a father.
             'fatherCard' => $user->is_father ? $this->fatherCard($user) : null,
+            'dueDate' => $user->is_expecting ? optional($user->due_date)->toDateString() : null,
+            'badges' => $user->badges()->orderBy('name')->get()->map(fn (\App\Models\Badge $b) => [
+                'key' => $b->key,
+                'name' => $b->name,
+                'emoji' => $b->emoji,
+                'description' => $b->description,
+            ]),
         ]);
     }
 

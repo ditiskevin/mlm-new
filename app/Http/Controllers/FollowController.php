@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Post;
 use App\Models\User;
+use App\Support\BadgeService;
 use App\Support\Notifier;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -51,6 +52,8 @@ class FollowController extends Controller
                 icon: '👋',
                 actor: $me,
             );
+
+            BadgeService::evaluate($user); // followed member may earn 'sociaal'
         }
 
         return back();

@@ -3,6 +3,9 @@ import MlmLayout from '@/Layouts/MlmLayout.vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 
+import PregnancyTracker from '@/Components/PregnancyTracker.vue';
+import BadgeList from '@/Components/BadgeList.vue';
+
 const page = usePage();
 const user = computed(() => page.props.auth?.user ?? {});
 const unreadMessages = computed(() => page.props.auth?.unreadMessages ?? 0);
@@ -10,6 +13,8 @@ const unreadMessages = computed(() => page.props.auth?.unreadMessages ?? 0);
 const props = defineProps({
     suggestedAudience: { type: Object, default: null },
     fatherCard: { type: Object, default: null },
+    dueDate: { type: String, default: null },
+    badges: { type: Array, default: () => [] },
 });
 
 const fatherPct = computed(() =>
@@ -41,9 +46,12 @@ const shortcuts = [
                     <h1 style="font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 28px; color: #473537; margin: 0; letter-spacing: -0.3px">{{ user.name }}</h1>
                     <span v-if="user.parent_type_label" style="display: inline-block; margin-top: 5px; font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 12px; color: #c0566b; background: #fff; border-radius: 999px; padding: 4px 12px">{{ user.parent_type_label }}</span>
                     <p style="font-size: 14px; color: #7a6c67; margin: 6px 0 0">{{ user.role_label || 'Fijn dat je er bent — je staat er niet alleen voor. 💛' }}</p>
+                    <BadgeList :badges="badges" style="margin-top: 10px" />
                 </div>
                 <Link :href="route('profile.edit')" style="flex: none; font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 14px; color: #c0566b; background: #fff; border-radius: 999px; padding: 11px 18px; text-decoration: none">Profiel bewerken</Link>
             </div>
+
+            <PregnancyTracker :due-date="dueDate" />
 
             <!-- Berichten -->
             <Link

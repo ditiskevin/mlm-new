@@ -10,6 +10,7 @@ use App\Models\PollVote;
 use App\Models\Post;
 use App\Models\Reaction;
 use App\Models\User;
+use App\Support\BadgeService;
 use App\Support\Notifier;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -22,6 +23,7 @@ class CommunityController extends Controller
     public function index(): Response
     {
         $user = Auth::user();
+        $hiddenIds = $user ? $user->blockedIdsWith() : [];
         $followedIds = $user
             ? $user->followedGroups()->pluck('community_groups.id')->flip()
             : collect();
@@ -47,6 +49,7 @@ class CommunityController extends Controller
 
         $postModels = Post::with(['group', 'comments' => fn ($q) => $q->oldest()])
             ->withCount('likers')
+            ->when($hiddenIds, fn ($q) => $q->whereNotIn('user_id', $hiddenIds))
             ->latest()
             ->get();
 
@@ -92,8 +95,8 @@ class CommunityController extends Controller
             'bookmarked' => $bookmarkedPostIds->has($p->id),
             'reactions' => $postReactions->get($p->id, collect())->values(),
             'my_reaction' => optional($myReactions->get($postMorph))->get($p->id),
-            'comment_count' => $p->comments->count(),
-            'comments' => $p->comments->map(fn ($c) => [
+            'comment_count' => $p->comments->reject(fn ($c) => in_array($c->user_id, $hiddenIds, true))->count(),
+            'comments' => $p->comments->reject(fn ($c) => in_array($c->user_id, $hiddenIds, true))->map(fn ($c) => [
                 'id' => $c->id,
                 'author_id' => $c->user_id,
                 'author_name' => $c->author_name,
@@ -206,6 +209,8 @@ class CommunityController extends Controller
             'avatar_color' => $user->avatar_color ?: '#F7A8B5',
             'body' => $data['body'],
         ]);
+
+        BadgeService::evaluate($user);
 
         return back();
     }

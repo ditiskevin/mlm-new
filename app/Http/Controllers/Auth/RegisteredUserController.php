@@ -53,10 +53,12 @@ class RegisteredUserController extends Controller
             'parenting_role' => $request->parenting_role,
         ]);
 
+        \App\Support\BadgeService::award($user, 'welkom');
+
         event(new Registered($user));
 
         Auth::login($user);
 
-        return redirect(route('dashboard', absolute: false));
+        return redirect(route('onboarding.show', absolute: false));
     }
 }

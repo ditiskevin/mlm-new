@@ -6,6 +6,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ArticleCommentController;
 use App\Http\Controllers\AudienceController;
 use App\Http\Controllers\BabysitterController;
+use App\Http\Controllers\BlockController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\BookmarkController;
 use App\Http\Controllers\CommunityController;
@@ -114,6 +115,14 @@ Route::middleware('auth')->group(function () {
     // Leden volgen + 'Volgend' tijdlijn
     Route::post('/leden/{user}/volgen', [FollowController::class, 'toggle'])->name('follow.toggle');
     Route::get('/volgend', [FollowController::class, 'following'])->name('follow.following');
+
+    // Lid blokkeren
+    Route::post('/leden/{user}/blokkeren', [BlockController::class, 'toggle'])->name('members.block');
+    Route::get('/geblokkeerd', [BlockController::class, 'index'])->name('members.blocked');
+
+    // Onboarding (welkom-wizard)
+    Route::get('/welkom', [\App\Http\Controllers\OnboardingController::class, 'show'])->name('onboarding.show');
+    Route::post('/welkom', [\App\Http\Controllers\OnboardingController::class, 'store'])->name('onboarding.store');
 
     // Eigen community-groep aanmaken / beheren
     Route::get('/community/groepen/aanmaken', [CommunityController::class, 'createGroup'])->name('community.groups.create');

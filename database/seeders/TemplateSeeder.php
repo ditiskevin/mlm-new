@@ -25,6 +25,10 @@ class TemplateSeeder extends Seeder
 
     public function run(): void
     {
+        // Badges are pure reference data (idempotent) — always keep them in sync,
+        // even on a DB that already has the rest of the templates.
+        $this->call([BadgeSeeder::class]);
+
         $alreadySeeded = Audience::query()->exists();
         $force = filter_var(env('SEED_FRESH', false), FILTER_VALIDATE_BOOLEAN);
 

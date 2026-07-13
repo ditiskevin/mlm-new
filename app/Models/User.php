@@ -15,7 +15,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 
-#[Fillable(['name', 'email', 'password', 'role_label', 'parent_type', 'gender', 'parenting_role', 'bio', 'avatar_color', 'avatar_path'])]
+#[Fillable(['name', 'email', 'password', 'role_label', 'parent_type', 'gender', 'parenting_role', 'bio', 'avatar_color', 'avatar_path', 'is_expecting', 'due_date', 'children_count'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -122,6 +122,9 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_admin' => 'boolean',
+            'is_expecting' => 'boolean',
+            'due_date' => 'date',
+            'onboarded_at' => 'datetime',
         ];
     }
 
@@ -179,6 +182,41 @@ class User extends Authenticatable
     public function isFollowing(User $u): bool
     {
         return $this->following()->whereKey($u->id)->exists();
+    }
+
+    public function badges(): BelongsToMany
+    {
+        return $this->belongsToMany(Badge::class, 'user_badges')->withTimestamps();
+    }
+
+    /** Members this user has blocked. */
+    public function blockedUsers(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'user_blocks', 'blocker_id', 'blocked_id')->withTimestamps();
+    }
+
+    /** Members who have blocked this user. */
+    public function blockedByUsers(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'user_blocks', 'blocked_id', 'blocker_id')->withTimestamps();
+    }
+
+    public function hasBlocked(User $u): bool
+    {
+        return $this->blockedUsers()->whereKey($u->id)->exists();
+    }
+
+    /**
+     * IDs of every member this user has blocked OR who has blocked this user.
+     *
+     * @return array<int, int>
+     */
+    public function blockedIdsWith(): array
+    {
+        $blocked = \Illuminate\Support\Facades\DB::table('user_blocks')->where('blocker_id', $this->id)->pluck('blocked_id');
+        $blockedBy = \Illuminate\Support\Facades\DB::table('user_blocks')->where('blocked_id', $this->id)->pluck('blocker_id');
+
+        return $blocked->merge($blockedBy)->unique()->values()->all();
     }
 
     public function unreadNotificationsCount(): int

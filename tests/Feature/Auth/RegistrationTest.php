@@ -27,7 +27,7 @@ class RegistrationTest extends TestCase
         ]);
 
         $this->assertAuthenticated();
-        $response->assertRedirect(route('dashboard', absolute: false));
+        $response->assertRedirect(route('onboarding.show', absolute: false));
     }
 
     public function test_new_users_can_register_with_gender_and_parenting_role(): void
@@ -40,7 +40,7 @@ class RegistrationTest extends TestCase
             'parenting_role' => 'vader',
             'password' => 'password',
             'password_confirmation' => 'password',
-        ])->assertRedirect(route('dashboard', absolute: false));
+        ])->assertRedirect(route('onboarding.show', absolute: false));
 
         $this->assertAuthenticated();
         $this->assertDatabaseHas('users', [

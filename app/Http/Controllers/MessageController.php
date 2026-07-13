@@ -46,6 +46,10 @@ class MessageController extends Controller
             return redirect()->route('messages.index')->with('error', 'Je kunt geen bericht naar jezelf sturen.');
         }
 
+        if ($me->hasBlocked($user) || $user->hasBlocked($me)) {
+            return redirect()->route('messages.index')->with('error', 'Je kunt geen bericht sturen naar dit lid.');
+        }
+
         $conversation = Conversation::between($me, $user);
 
         return redirect()->route('messages.show', $conversation);
@@ -55,6 +59,9 @@ class MessageController extends Controller
     {
         $user = $request->user();
         $this->authorizeParticipant($conversation, $user);
+
+        $other = $conversation->participants()->where('users.id', '!=', $user->id)->first();
+        abort_if($other && ($user->hasBlocked($other) || $other->hasBlocked($user)), 403);
 
         $data = $request->validate([
             'body' => ['required', 'string', 'max:4000'],

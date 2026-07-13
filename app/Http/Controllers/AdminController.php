@@ -504,6 +504,10 @@ class AdminController extends Controller
             'published_at' => $article->published_at ?? now(),
         ]);
 
+        if ($article->user) {
+            \App\Support\BadgeService::evaluate($article->user); // author may earn 'verhalenverteller'
+        }
+
         return back()->with('success', 'Verhaal goedgekeurd en gepubliceerd. 💛');
     }
 

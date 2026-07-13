@@ -2,6 +2,8 @@
 import MlmLayout from '@/Layouts/MlmLayout.vue';
 import ReportButton from '@/Components/ReportButton.vue';
 import FollowButton from '@/Components/FollowButton.vue';
+import BlockButton from '@/Components/BlockButton.vue';
+import BadgeList from '@/Components/BadgeList.vue';
 import { Head, Link } from '@inertiajs/vue3';
 
 defineProps({
@@ -10,6 +12,8 @@ defineProps({
     isSelf: { type: Boolean, default: false },
     canMessage: { type: Boolean, default: false },
     isFollowing: { type: Boolean, default: false },
+    isBlocked: { type: Boolean, default: false },
+    badges: { type: Array, default: () => [] },
 });
 
 const badge = (text, color, bg) => ({ text, color, bg });
@@ -35,6 +39,8 @@ const badge = (text, color, bg) => ({ text, color, bg });
                         <span v-if="member.parenting_role" style="font-size: 12px; font-weight: 600; color: #5e9e78; background: #e4f3e9; border-radius: 999px; padding: 4px 11px">{{ member.parenting_role }}</span>
                         <span v-if="member.gender" style="font-size: 12px; font-weight: 600; color: #7a6c67; background: #f3ece9; border-radius: 999px; padding: 4px 11px">{{ member.gender }}</span>
                     </div>
+
+                    <BadgeList :badges="badges" style="margin-top: 12px" />
 
                     <div v-if="member.role" style="font-size: 13.5px; color: #9a8d88; margin-top: 8px">{{ member.role }}</div>
                     <p v-if="member.bio" style="font-size: 15px; line-height: 1.7; color: #5d514d; margin: 14px 0 0; white-space: pre-line">{{ member.bio }}</p>
@@ -72,6 +78,7 @@ const badge = (text, color, bg) => ({ text, color, bg });
                         >
                         <FollowButton :user-id="member.id" :following="isFollowing" />
                         <ReportButton v-if="!isSelf" type="user" :id="member.id" label="Profiel melden" />
+                        <BlockButton v-if="!isSelf" :user-id="member.id" :blocked="isBlocked" />
                     </div>
                 </div>
             </div>
