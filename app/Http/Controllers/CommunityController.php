@@ -3,8 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Bookmark;
+use App\Models\Comment;
 use App\Models\CommunityGroup;
+use App\Models\Poll;
+use App\Models\PollVote;
 use App\Models\Post;
+use App\Models\Reaction;
 use App\Models\User;
 use App\Support\Notifier;
 use Illuminate\Http\RedirectResponse;
@@ -41,38 +45,107 @@ class CommunityController extends Controller
             'is_owner' => $user && $g->user_id === $user->id,
         ]);
 
-        $posts = Post::with(['group', 'comments' => fn ($q) => $q->oldest()])
+        $postModels = Post::with(['group', 'comments' => fn ($q) => $q->oldest()])
             ->withCount('likers')
             ->latest()
+            ->get();
+
+        // --- Emoji reactions (grouped, no N+1) ---
+        $postMorph = (new Post)->getMorphClass();
+        $commentMorph = (new Comment)->getMorphClass();
+        $postIds = $postModels->pluck('id');
+        $commentIds = $postModels->flatMap->comments->pluck('id');
+
+        $summary = fn (string $morph, $ids) => $ids->isEmpty() ? collect() : Reaction::selectRaw('reactable_id, emoji, COUNT(*) as count')
+            ->where('reactable_type', $morph)
+            ->whereIn('reactable_id', $ids)
+            ->groupBy('reactable_id', 'emoji')
             ->get()
-            ->map(fn (Post $p) => [
-                'id' => $p->id,
-                'author_id' => $p->user_id,
-                'author_name' => $p->author_name,
-                'initial' => mb_substr($p->author_name, 0, 1),
-                'avatar_color' => $p->avatar_color,
-                'tag' => $p->tag,
-                'body' => $p->body,
-                'meta' => ($p->group?->name ?? 'Beheerder').' · '.$p->created_at->diffForHumans(),
-                'like_count' => $p->base_likes + $p->likers_count,
-                'liked' => $likedIds->has($p->id),
-                'bookmarked' => $bookmarkedPostIds->has($p->id),
-                'comment_count' => $p->comments->count(),
-                'comments' => $p->comments->map(fn ($c) => [
-                    'id' => $c->id,
-                    'author_id' => $c->user_id,
-                    'author_name' => $c->author_name,
-                    'initial' => mb_substr($c->author_name, 0, 1),
-                    'avatar_color' => $c->avatar_color,
-                    'body' => $c->body,
-                    'meta' => $c->created_at->diffForHumans(),
-                ])->values(),
-            ]);
+            ->groupBy('reactable_id')
+            ->map(fn ($rows) => $rows->map(fn ($r) => ['emoji' => $r->emoji, 'count' => (int) $r->count])->values());
+
+        $postReactions = $summary($postMorph, $postIds);
+        $commentReactions = $summary($commentMorph, $commentIds);
+
+        $myReactions = $user
+            ? Reaction::where('user_id', $user->id)
+                ->where(function ($q) use ($postMorph, $postIds, $commentMorph, $commentIds) {
+                    $q->where(fn ($qq) => $qq->where('reactable_type', $postMorph)->whereIn('reactable_id', $postIds))
+                        ->orWhere(fn ($qq) => $qq->where('reactable_type', $commentMorph)->whereIn('reactable_id', $commentIds));
+                })
+                ->get()
+                ->groupBy('reactable_type')
+                ->map(fn ($rows) => $rows->keyBy('reactable_id')->map->emoji)
+            : collect();
+
+        $posts = $postModels->map(fn (Post $p) => [
+            'id' => $p->id,
+            'author_id' => $p->user_id,
+            'author_name' => $p->author_name,
+            'initial' => mb_substr($p->author_name, 0, 1),
+            'avatar_color' => $p->avatar_color,
+            'tag' => $p->tag,
+            'body' => $p->body,
+            'meta' => ($p->group?->name ?? 'Beheerder').' · '.$p->created_at->diffForHumans(),
+            'like_count' => $p->base_likes + $p->likers_count,
+            'liked' => $likedIds->has($p->id),
+            'bookmarked' => $bookmarkedPostIds->has($p->id),
+            'reactions' => $postReactions->get($p->id, collect())->values(),
+            'my_reaction' => optional($myReactions->get($postMorph))->get($p->id),
+            'comment_count' => $p->comments->count(),
+            'comments' => $p->comments->map(fn ($c) => [
+                'id' => $c->id,
+                'author_id' => $c->user_id,
+                'author_name' => $c->author_name,
+                'initial' => mb_substr($c->author_name, 0, 1),
+                'avatar_color' => $c->avatar_color,
+                'body' => $c->body,
+                'meta' => $c->created_at->diffForHumans(),
+                'reactions' => $commentReactions->get($c->id, collect())->values(),
+                'my_reaction' => optional($myReactions->get($commentMorph))->get($c->id),
+            ])->values(),
+        ]);
+
+        // --- Polls ---
+        $myPollVotes = $user
+            ? PollVote::where('user_id', $user->id)->pluck('poll_option_id', 'poll_id')
+            : collect();
+
+        $polls = Poll::with(['options', 'group'])
+            ->withCount('votes')
+            ->latest()
+            ->get()
+            ->map(function (Poll $poll) use ($user, $myPollVotes) {
+                $counts = PollVote::where('poll_id', $poll->id)
+                    ->selectRaw('poll_option_id, COUNT(*) as aggregate')
+                    ->groupBy('poll_option_id')
+                    ->pluck('aggregate', 'poll_option_id');
+                $total = (int) $poll->votes_count;
+
+                return [
+                    'id' => $poll->id,
+                    'question' => $poll->question,
+                    'author_name' => $poll->author_name,
+                    'initial' => mb_substr($poll->author_name, 0, 1),
+                    'avatar_color' => $poll->avatar_color,
+                    'when' => ($poll->group?->name ?? 'Community').' · '.$poll->created_at->diffForHumans(),
+                    'options' => $poll->options->map(fn ($opt) => [
+                        'id' => $opt->id,
+                        'label' => $opt->label,
+                        'votes' => (int) ($counts[$opt->id] ?? 0),
+                        'percent' => $total > 0 ? (int) round(($counts[$opt->id] ?? 0) / $total * 100) : 0,
+                    ])->values(),
+                    'total_votes' => $total,
+                    'my_option' => $myPollVotes[$poll->id] ?? null,
+                    'can_delete' => $user && ($poll->user_id === $user->id || $user->is_admin),
+                ];
+            });
 
         return Inertia::render('Community', [
             'profile' => $this->profileCard($user),
             'groups' => $groups,
             'posts' => $posts,
+            'polls' => $polls,
         ]);
     }
 

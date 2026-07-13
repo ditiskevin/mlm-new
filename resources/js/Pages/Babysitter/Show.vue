@@ -1,11 +1,17 @@
 <script setup>
 import MlmLayout from '@/Layouts/MlmLayout.vue';
 import ReportButton from '@/Components/ReportButton.vue';
+import BabysitterReviews from '@/Components/BabysitterReviews.vue';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 
 const props = defineProps({
     sitter: { type: Object, required: true },
+    reviews: { type: Array, default: () => [] },
+    average: { type: [Number, null], default: null },
+    count: { type: Number, default: 0 },
+    canReview: { type: Boolean, default: false },
+    myReview: { type: [Object, null], default: null },
 });
 
 const isAuth = computed(() => !!usePage().props.auth?.user);
@@ -77,6 +83,15 @@ const remove = () => {
                         <button v-if="sitter.canDelete" @click="remove" style="font-family: 'Quicksand', sans-serif; font-weight: 600; font-size: 13px; color: #b4574e; background: none; border: none; cursor: pointer">Profiel verwijderen</button>
                         <span v-if="!sitter.canDelete" style="margin-left: auto"><ReportButton type="babysitter" :id="sitter.id" label="Profiel melden" /></span>
                     </div>
+
+                    <BabysitterReviews
+                        :sitter-id="sitter.id"
+                        :reviews="reviews"
+                        :average="average"
+                        :count="count"
+                        :can-review="canReview"
+                        :my-review="myReview"
+                    />
                 </div>
             </div>
         </section>

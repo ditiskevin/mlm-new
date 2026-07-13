@@ -2,6 +2,9 @@
 import MlmLayout from '@/Layouts/MlmLayout.vue';
 import ReportButton from '@/Components/ReportButton.vue';
 import BookmarkButton from '@/Components/BookmarkButton.vue';
+import ReactionBar from '@/Components/ReactionBar.vue';
+import PollComposer from '@/Components/PollComposer.vue';
+import PollCard from '@/Components/PollCard.vue';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import { computed, reactive } from 'vue';
 
@@ -9,6 +12,7 @@ const props = defineProps({
     profile: { type: Object, required: true },
     groups: { type: Array, required: true },
     posts: { type: Array, required: true },
+    polls: { type: Array, default: () => [] },
 });
 
 const page = usePage();
@@ -167,6 +171,9 @@ const likeBtnStyle = (isLiked) =>
                         </div>
                     </div>
 
+                    <PollComposer />
+                    <PollCard v-for="poll in polls" :key="'poll-' + poll.id" :poll="poll" />
+
                     <div v-for="p in posts" :key="p.id" style="background: #fff; border: 1px solid #f2e7e2; border-radius: 22px; padding: 20px 22px; box-shadow: 0 8px 20px rgba(180, 150, 150, 0.07)">
                         <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 13px">
                             <Link v-if="p.author_id" :href="route('members.show', p.author_id)" :style="avatarStyle(p.avatar_color)">{{ p.initial }}</Link>
@@ -188,6 +195,7 @@ const likeBtnStyle = (isLiked) =>
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M21 12a8 8 0 0 1-8 8H7l-4 3V12a8 8 0 0 1 8-8h2a8 8 0 0 1 8 8Z" stroke="#9a8d88" stroke-width="1.8" /></svg>
                                 Reageer<span v-if="p.comment_count"> · {{ p.comment_count }}</span>
                             </button>
+                            <ReactionBar type="post" :id="p.id" :summary="p.reactions" :mine="p.my_reaction" />
                             <span style="margin-left: auto; display: flex; align-items: center; gap: 16px">
                                 <BookmarkButton type="post" :id="p.id" :saved="p.bookmarked" />
                                 <ReportButton type="post" :id="p.id" />
@@ -207,6 +215,7 @@ const likeBtnStyle = (isLiked) =>
                                         <span style="margin-left: auto"><ReportButton type="comment" :id="c.id" variant="icon" /></span>
                                     </div>
                                     <p style="margin: 3px 0 0; font-size: 14px; line-height: 1.55; color: #5d514d">{{ c.body }}</p>
+                                    <div style="margin-top: 6px"><ReactionBar type="comment" :id="c.id" :summary="c.reactions" :mine="c.my_reaction" /></div>
                                 </div>
                             </div>
 

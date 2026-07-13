@@ -15,6 +15,8 @@ use App\Http\Controllers\FollowController;
 use App\Http\Controllers\ForumController;
 use App\Http\Controllers\ForumInteractionController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\ListingFavoriteController;
+use App\Http\Controllers\ListingStatusController;
 use App\Http\Controllers\MarketplaceController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RevealController;
@@ -51,6 +53,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/marktplaats/plaatsen', [MarketplaceController::class, 'create'])->name('marketplace.create');
     Route::post('/marktplaats', [MarketplaceController::class, 'store'])->name('marketplace.store');
     Route::delete('/marktplaats/{listing}', [MarketplaceController::class, 'destroy'])->name('marketplace.destroy');
+    Route::post('/marktplaats/{listing}/favoriet', [ListingFavoriteController::class, 'toggle'])->name('marketplace.favorite');
+    Route::get('/marktplaats-favorieten', [ListingFavoriteController::class, 'index'])->name('marketplace.favorites');
+    Route::patch('/marktplaats/{listing}/status', [ListingStatusController::class, 'update'])->name('marketplace.status');
 });
 Route::get('/marktplaats/{listing}', [MarketplaceController::class, 'show'])->name('marketplace.show');
 
@@ -60,6 +65,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/oppas/aanmelden', [BabysitterController::class, 'create'])->name('babysitters.create');
     Route::post('/oppas', [BabysitterController::class, 'store'])->name('babysitters.store');
     Route::delete('/oppas/{babysitter}', [BabysitterController::class, 'destroy'])->name('babysitters.destroy');
+    Route::post('/oppas/{babysitter}/beoordeling', [\App\Http\Controllers\BabysitterReviewController::class, 'store'])->name('babysitter.reviews.store');
+    Route::delete('/oppas-beoordelingen/{review}', [\App\Http\Controllers\BabysitterReviewController::class, 'destroy'])->name('babysitter.reviews.destroy');
 });
 Route::get('/oppas/{babysitter}', [BabysitterController::class, 'show'])->name('babysitters.show');
 
@@ -95,6 +102,14 @@ Route::middleware('auth')->group(function () {
     // Bewaard (bookmarks)
     Route::post('/bookmarks/toggle', [BookmarkController::class, 'toggle'])->name('bookmarks.toggle');
     Route::get('/bewaard', [BookmarkController::class, 'index'])->name('bookmarks.index');
+
+    // Emoji care-reacties
+    Route::post('/reacties-emoji/toggle', [\App\Http\Controllers\ReactionController::class, 'toggle'])->name('reactions.toggle');
+
+    // Community polls
+    Route::post('/polls', [\App\Http\Controllers\PollController::class, 'store'])->name('polls.store');
+    Route::post('/polls/{poll}/stem', [\App\Http\Controllers\PollController::class, 'vote'])->name('polls.vote');
+    Route::delete('/polls/{poll}', [\App\Http\Controllers\PollController::class, 'destroy'])->name('polls.destroy');
 
     // Leden volgen + 'Volgend' tijdlijn
     Route::post('/leden/{user}/volgen', [FollowController::class, 'toggle'])->name('follow.toggle');

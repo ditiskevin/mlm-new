@@ -1,5 +1,7 @@
 <script setup>
 import MlmLayout from '@/Layouts/MlmLayout.vue';
+import FavoriteButton from '@/Components/FavoriteButton.vue';
+import ListingStatusBadge from '@/Components/ListingStatusBadge.vue';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 
@@ -76,6 +78,7 @@ const pillStyle = (active) =>
                         <img v-if="l.image_url" :src="l.image_url" alt="" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover" />
                         <span v-else>{{ l.emoji }}</span>
                         <span :style="{ position: 'absolute', top: '12px', left: '12px', fontFamily: 'Poppins, sans-serif', fontWeight: 600, fontSize: '11px', color: '#fff', background: offerColor(l.offer_type), borderRadius: '999px', padding: '4px 11px' }">{{ l.offer_label }}</span>
+                        <span v-if="l.status && l.status !== 'beschikbaar'" style="position: absolute; top: 12px; right: 12px"><ListingStatusBadge :status="l.status" /></span>
                     </div>
                     <div style="padding: 16px 18px 18px">
                         <div style="font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 16px; line-height: 1.3; color: #473537; margin-bottom: 5px">{{ l.title }}</div>
@@ -84,6 +87,7 @@ const pillStyle = (active) =>
                             <span style="font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 16px; color: #c0566b">{{ l.price ? '€ ' + l.price : l.offer_label }}</span>
                             <span style="font-size: 12px; color: #9a8d88">📍 {{ l.location }}</span>
                         </div>
+                        <div style="margin-top: 10px"><FavoriteButton :slug="l.slug" :favorited="l.favorited" /></div>
                     </div>
                 </Link>
             </div>

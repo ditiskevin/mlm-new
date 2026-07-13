@@ -1,6 +1,9 @@
 <script setup>
 import MlmLayout from '@/Layouts/MlmLayout.vue';
 import ReportButton from '@/Components/ReportButton.vue';
+import FavoriteButton from '@/Components/FavoriteButton.vue';
+import ListingStatusBadge from '@/Components/ListingStatusBadge.vue';
+import ListingStatusControl from '@/Components/ListingStatusControl.vue';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 
@@ -32,6 +35,7 @@ const remove = () => {
 
                 <div>
                     <span style="display: inline-block; font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 11px; letter-spacing: 0.5px; text-transform: uppercase; color: #c0566b; background: #fce7eb; border-radius: 999px; padding: 4px 11px; margin-bottom: 10px">{{ listing.category }} · {{ listing.offer_label }}</span>
+                    <span v-if="listing.status && listing.status !== 'beschikbaar'" style="display: inline-block; margin-left: 8px"><ListingStatusBadge :status="listing.status" /></span>
                     <h1 style="font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 28px; line-height: 1.2; color: #473537; margin: 0 0 8px">{{ listing.title }}</h1>
                     <div style="font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 24px; color: #c0566b; margin-bottom: 14px">{{ listing.price ? '€ ' + listing.price : listing.offer_label }}</div>
 
@@ -62,7 +66,10 @@ const remove = () => {
                         >
                     </div>
 
-                    <div style="margin-top: 16px; display: flex; gap: 16px; align-items: center">
+                    <ListingStatusControl v-if="listing.canDelete" :slug="listing.slug" :status="listing.status" />
+
+                    <div style="margin-top: 16px; display: flex; gap: 16px; align-items: center; flex-wrap: wrap">
+                        <FavoriteButton :slug="listing.slug" :favorited="listing.favorited" />
                         <button v-if="listing.canDelete" @click="remove" style="font-family: 'Quicksand', sans-serif; font-weight: 600; font-size: 13px; color: #b4574e; background: none; border: none; cursor: pointer; padding: 0">Advertentie verwijderen</button>
                         <ReportButton v-if="!listing.canDelete" type="listing" :id="listing.id" label="Advertentie melden" />
                     </div>

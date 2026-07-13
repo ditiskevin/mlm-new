@@ -34,8 +34,19 @@ class MarketplaceController extends Controller
             $query->where(fn ($q) => $q->where('title', 'like', "%{$search}%")->orWhere('description', 'like', "%{$search}%"));
         }
 
+        $listings = $query->get();
+        $favoritedIds = auth()->id()
+            ? \Illuminate\Support\Facades\DB::table('listing_favorites')
+                ->where('user_id', auth()->id())
+                ->whereIn('listing_id', $listings->pluck('id'))
+                ->pluck('listing_id')->flip()
+            : collect();
+
         return Inertia::render('Marketplace/Index', [
-            'listings' => $query->get()->map(fn (Listing $l) => $this->card($l)),
+            'listings' => $listings->map(fn (Listing $l) => array_merge($this->card($l), [
+                'status' => $l->status,
+                'favorited' => $favoritedIds->has($l->id),
+            ])),
             'categories' => self::CATEGORIES,
             'offerTypes' => self::OFFER_TYPES,
             'filters' => ['category' => $category, 'type' => $type, 'q' => $search],
@@ -50,6 +61,11 @@ class MarketplaceController extends Controller
                 'owner_id' => $listing->user_id,
                 'description' => $listing->description,
                 'condition' => $listing->condition,
+                'status' => $listing->status,
+                'favorited' => auth()->id()
+                    ? \Illuminate\Support\Facades\DB::table('listing_favorites')
+                        ->where('user_id', auth()->id())->where('listing_id', $listing->id)->exists()
+                    : false,
                 'canDelete' => auth()->id() && auth()->id() === $listing->user_id,
                 'created' => $listing->created_at->translatedFormat('j F Y'),
             ]),

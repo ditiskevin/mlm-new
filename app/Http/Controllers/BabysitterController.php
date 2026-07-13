@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Babysitter;
+use App\Models\BabysitterReview;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -43,12 +44,30 @@ class BabysitterController extends Controller
 
     public function show(Babysitter $babysitter): Response
     {
+        $authId = auth()->id();
+        $isAdmin = (bool) (auth()->user()->is_admin ?? false);
+        $reviews = BabysitterReview::where('babysitter_id', $babysitter->id)->latest()->get();
+        $myReview = $authId ? $reviews->firstWhere('user_id', $authId) : null;
+
         return Inertia::render('Babysitter/Show', [
             'sitter' => array_merge($this->card($babysitter), [
                 'bio' => $babysitter->bio,
                 'owner_id' => $babysitter->user_id,
                 'canDelete' => auth()->id() && auth()->id() === $babysitter->user_id,
             ]),
+            'reviews' => $reviews->map(fn (BabysitterReview $r) => [
+                'id' => $r->id,
+                'author_name' => $r->author_name,
+                'initial' => Str::upper(Str::substr($r->author_name, 0, 1)),
+                'rating' => $r->rating,
+                'body' => $r->body,
+                'when' => $r->created_at?->diffForHumans(),
+                'can_delete' => $authId && ($r->user_id === $authId || $isAdmin),
+            ])->values(),
+            'average' => $reviews->count() ? round($reviews->avg('rating'), 1) : null,
+            'count' => $reviews->count(),
+            'canReview' => (bool) ($authId && $authId !== $babysitter->user_id),
+            'myReview' => $myReview ? ['id' => $myReview->id, 'rating' => $myReview->rating, 'body' => $myReview->body] : null,
         ]);
     }
 
