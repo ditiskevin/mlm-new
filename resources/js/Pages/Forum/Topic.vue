@@ -1,6 +1,7 @@
 <script setup>
 import MlmLayout from '@/Layouts/MlmLayout.vue';
 import ReportButton from '@/Components/ReportButton.vue';
+import HelpfulButton from '@/Components/HelpfulButton.vue';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 
@@ -26,6 +27,8 @@ const removeTopic = () => {
         router.delete(route('forum.topics.destroy', props.topic.slug));
     }
 };
+
+const markBest = (replyId) => router.patch(route('forum.replies.best', replyId), {}, { preserveScroll: true });
 
 const avatarStyle = (color, size = 46) =>
     `width:${size}px;height:${size}px;border-radius:50%;flex:none;background:${color};display:flex;align-items:center;justify-content:center;font-family:'Poppins',sans-serif;font-weight:700;color:#fff;font-size:${size > 40 ? 18 : 16}px;text-decoration:none`;
@@ -63,14 +66,26 @@ const avatarStyle = (color, size = 46) =>
                 <div v-for="r in replies" :key="r.id" style="display: flex; gap: 12px; align-items: flex-start">
                     <Link v-if="r.author_id" :href="route('members.show', r.author_id)" :style="avatarStyle(r.avatar_color, 42)">{{ r.initial }}</Link>
                     <span v-else :style="avatarStyle(r.avatar_color, 42)">{{ r.initial }}</span>
-                    <div style="flex: 1; background: #fff; border: 1px solid #f2e7e2; border-radius: 18px; padding: 14px 18px; box-shadow: 0 6px 16px rgba(180, 150, 150, 0.05)">
+                    <div :style="r.is_best
+                        ? 'flex:1;border-radius:18px;padding:14px 18px;background:#f2fbf5;border:1.5px solid #a8dcbd;box-shadow:0 6px 16px rgba(95,160,124,0.10)'
+                        : 'flex:1;border-radius:18px;padding:14px 18px;background:#fff;border:1px solid #f2e7e2;box-shadow:0 6px 16px rgba(180,150,150,0.05)'">
+                        <div v-if="r.is_best" style="display: inline-flex; align-items: center; gap: 5px; font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 12px; color: #4a7d61; background: #e4f3e9; border-radius: 999px; padding: 3px 10px; margin-bottom: 8px">🏅 Beste antwoord</div>
                         <div style="display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px">
                             <Link v-if="r.author_id" :href="route('members.show', r.author_id)" style="font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 14px; color: #473537; text-decoration: none">{{ r.author_name }}</Link>
                             <span v-else style="font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 14px; color: #473537">{{ r.author_name }}</span>
                             <span style="font-size: 11.5px; color: #9a8d88">{{ r.created }}</span>
                             <span style="margin-left: auto"><ReportButton type="forum_reply" :id="r.id" variant="icon" /></span>
                         </div>
-                        <p style="margin: 0; font-size: 15px; line-height: 1.65; color: #5d514d; white-space: pre-line">{{ r.body }}</p>
+                        <p style="margin: 0 0 10px; font-size: 15px; line-height: 1.65; color: #5d514d; white-space: pre-line">{{ r.body }}</p>
+                        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap">
+                            <HelpfulButton :reply-id="r.id" :count="r.helpful_count" :voted="r.helped" />
+                            <button
+                                v-if="topic.can_mark_best"
+                                type="button"
+                                @click="markBest(r.id)"
+                                :style="`font-family:'Quicksand',sans-serif;font-weight:600;font-size:12.5px;cursor:pointer;border-radius:999px;padding:5px 12px;border:1px solid ${r.is_best ? '#a8dcbd' : '#f1e7e2'};background:${r.is_best ? '#e4f3e9' : '#faf6f3'};color:${r.is_best ? '#4a7d61' : '#7a6c67'}`"
+                            >{{ r.is_best ? '🏅 Beste antwoord' : 'Markeer als beste' }}</button>
+                        </div>
                     </div>
                 </div>
             </div>

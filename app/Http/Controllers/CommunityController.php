@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Bookmark;
 use App\Models\CommunityGroup;
 use App\Models\Post;
 use App\Models\User;
+use App\Support\Notifier;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -21,6 +23,11 @@ class CommunityController extends Controller
             : collect();
         $likedIds = $user
             ? $user->likedPosts()->pluck('posts.id')->flip()
+            : collect();
+        $bookmarkedPostIds = $user
+            ? Bookmark::where('user_id', $user->id)
+                ->where('bookmarkable_type', (new Post)->getMorphClass())
+                ->pluck('bookmarkable_id')->flip()
             : collect();
 
         $groups = CommunityGroup::orderByDesc('members')->get()->map(fn (CommunityGroup $g) => [
@@ -49,6 +56,7 @@ class CommunityController extends Controller
                 'meta' => ($p->group?->name ?? 'Beheerder').' · '.$p->created_at->diffForHumans(),
                 'like_count' => $p->base_likes + $p->likers_count,
                 'liked' => $likedIds->has($p->id),
+                'bookmarked' => $bookmarkedPostIds->has($p->id),
                 'comment_count' => $p->comments->count(),
                 'comments' => $p->comments->map(fn ($c) => [
                     'id' => $c->id,
@@ -143,6 +151,19 @@ class CommunityController extends Controller
             'avatar_color' => $user->avatar_color ?: '#CFE3F5',
             'body' => $data['body'],
         ]);
+
+        // Notify the post author about the new comment.
+        if ($post->user_id) {
+            Notifier::send(
+                recipient: $post->user_id,
+                type: 'comment',
+                title: $user->name.' reageerde op je bericht',
+                body: \Illuminate\Support\Str::limit($data['body'], 60),
+                url: route('community'),
+                icon: '💬',
+                actor: $user,
+            );
+        }
 
         return back();
     }

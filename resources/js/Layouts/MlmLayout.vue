@@ -386,6 +386,8 @@ const mobileLinkStyle = (active, indent = false) =>
                             💬 Berichten
                             <span v-if="unreadMessages" style="font-size: 10.5px; font-weight: 700; color: #fff; background: #f28b82; border-radius: 999px; padding: 1px 7px">{{ unreadMessages > 9 ? '9+' : unreadMessages }}</span>
                         </Link>
+                        <Link :href="route('bookmarks.index')" :style="mobileLinkStyle(route().current('bookmarks.*'))">🔖 Bewaard</Link>
+                        <Link :href="route('follow.following')" :style="mobileLinkStyle(route().current('follow.*'))">👥 Van wie ik volg</Link>
                         <Link :href="route('dashboard')" :style="mobileLinkStyle(route().current('dashboard'))">👤 Hoi, {{ user.name.split(' ')[0] }}</Link>
                         <Link :href="route('logout')" method="post" as="button" :style="mobileLinkStyle(false)">Uitloggen</Link>
                     </template>

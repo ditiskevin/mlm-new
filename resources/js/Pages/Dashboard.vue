@@ -23,6 +23,9 @@ const shortcuts = [
     { label: 'Babynamen', desc: 'Je favoriete namen', href: route('reveal') + '?tab=namen', emoji: '💖', bg: '#E1EEFB' },
     { label: 'Forum', desc: 'Vraag & deel met ouders', href: route('forum.index'), emoji: '🗣️', bg: '#EEE6F6' },
     { label: 'Marktplaats', desc: 'Jouw advertenties & meer', href: route('marketplace.index'), emoji: '🛍️', bg: '#FCE7EB' },
+    { label: 'Bewaard', desc: 'Je opgeslagen berichten & artikelen', href: route('bookmarks.index'), emoji: '🔖', bg: '#FBEFD8' },
+    { label: 'Van wie ik volg', desc: 'Tijdlijn van leden die je volgt', href: route('follow.following'), emoji: '👥', bg: '#E1EEFB' },
+    { label: 'Notificaties', desc: 'Alles wat er speelt rond jou', href: route('notifications.index'), emoji: '🔔', bg: '#EEE6F6' },
 ];
 </script>
 

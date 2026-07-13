@@ -162,6 +162,25 @@ class User extends Authenticatable
         return $this->hasMany(Notification::class);
     }
 
+    /** Members this user follows. */
+    public function following(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'user_follows', 'follower_id', 'followed_id')
+            ->withTimestamps();
+    }
+
+    /** Members who follow this user. */
+    public function followers(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'user_follows', 'followed_id', 'follower_id')
+            ->withTimestamps();
+    }
+
+    public function isFollowing(User $u): bool
+    {
+        return $this->following()->whereKey($u->id)->exists();
+    }
+
     public function unreadNotificationsCount(): int
     {
         return $this->notifications()->whereNull('read_at')->count();

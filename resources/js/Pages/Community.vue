@@ -1,6 +1,7 @@
 <script setup>
 import MlmLayout from '@/Layouts/MlmLayout.vue';
 import ReportButton from '@/Components/ReportButton.vue';
+import BookmarkButton from '@/Components/BookmarkButton.vue';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import { computed, reactive } from 'vue';
 
@@ -187,7 +188,10 @@ const likeBtnStyle = (isLiked) =>
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M21 12a8 8 0 0 1-8 8H7l-4 3V12a8 8 0 0 1 8-8h2a8 8 0 0 1 8 8Z" stroke="#9a8d88" stroke-width="1.8" /></svg>
                                 Reageer<span v-if="p.comment_count"> · {{ p.comment_count }}</span>
                             </button>
-                            <span style="margin-left: auto"><ReportButton type="post" :id="p.id" /></span>
+                            <span style="margin-left: auto; display: flex; align-items: center; gap: 16px">
+                                <BookmarkButton type="post" :id="p.id" :saved="p.bookmarked" />
+                                <ReportButton type="post" :id="p.id" />
+                            </span>
                         </div>
 
                         <!-- comments -->

@@ -3,13 +3,17 @@
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\ChecklistController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\ArticleCommentController;
 use App\Http\Controllers\AudienceController;
 use App\Http\Controllers\BabysitterController;
 use App\Http\Controllers\BlogController;
+use App\Http\Controllers\BookmarkController;
 use App\Http\Controllers\CommunityController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\FatherController;
+use App\Http\Controllers\FollowController;
 use App\Http\Controllers\ForumController;
+use App\Http\Controllers\ForumInteractionController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MarketplaceController;
 use App\Http\Controllers\ProfileController;
@@ -28,6 +32,8 @@ Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
 Route::middleware('auth')->group(function () {
     Route::get('/blog/schrijven', [BlogController::class, 'create'])->name('blog.create');
     Route::post('/blog', [BlogController::class, 'store'])->name('blog.store');
+    Route::post('/blog/{article}/reacties', [ArticleCommentController::class, 'store'])->name('blog.comments.store');
+    Route::delete('/blog-reacties/{comment}', [ArticleCommentController::class, 'destroy'])->name('blog.comments.destroy');
 });
 Route::get('/blog/{article}', [BlogController::class, 'show'])->name('blog.show');
 
@@ -64,6 +70,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/forum/onderwerpen', [ForumController::class, 'storeTopic'])->name('forum.topics.store');
     Route::post('/forum/onderwerp/{topic}/reacties', [ForumController::class, 'storeReply'])->name('forum.replies.store');
     Route::delete('/forum/onderwerp/{topic}', [ForumController::class, 'destroyTopic'])->name('forum.topics.destroy');
+    Route::patch('/forum-reacties/{reply}/beste', [ForumInteractionController::class, 'markBest'])->name('forum.replies.best');
+    Route::post('/forum-reacties/{reply}/behulpzaam', [ForumInteractionController::class, 'toggleHelpful'])->name('forum.replies.helpful');
 });
 Route::get('/forum/categorie/{category}', [ForumController::class, 'category'])->name('forum.category');
 Route::get('/forum/onderwerp/{topic}', [ForumController::class, 'topic'])->name('forum.topic');
@@ -83,6 +91,14 @@ Route::middleware('auth')->group(function () {
     Route::post('/community/posts/{post}/comments', [CommunityController::class, 'storeComment'])->name('community.posts.comments.store');
     Route::post('/community/posts/{post}/like', [CommunityController::class, 'toggleLike'])->name('community.posts.like');
     Route::post('/community/groups/{group}/follow', [CommunityController::class, 'toggleFollow'])->name('community.groups.follow');
+
+    // Bewaard (bookmarks)
+    Route::post('/bookmarks/toggle', [BookmarkController::class, 'toggle'])->name('bookmarks.toggle');
+    Route::get('/bewaard', [BookmarkController::class, 'index'])->name('bookmarks.index');
+
+    // Leden volgen + 'Volgend' tijdlijn
+    Route::post('/leden/{user}/volgen', [FollowController::class, 'toggle'])->name('follow.toggle');
+    Route::get('/volgend', [FollowController::class, 'following'])->name('follow.following');
 
     // Eigen community-groep aanmaken / beheren
     Route::get('/community/groepen/aanmaken', [CommunityController::class, 'createGroup'])->name('community.groups.create');

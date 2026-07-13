@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Article;
+use App\Models\ArticleComment;
+use App\Models\Bookmark;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -64,11 +66,32 @@ class BlogController extends Controller
 
     public function show(Request $request, Article $article): Response
     {
+        $user = $request->user();
+
         // Pending/rejected articles are visible only to their author or an admin.
         if ($article->status !== 'published' || ! $article->published_at) {
-            $user = $request->user();
             abort_unless($user && ($user->is_admin || $user->id === $article->user_id), 404);
         }
+
+        $bookmarked = $user
+            ? Bookmark::where('user_id', $user->id)
+                ->where('bookmarkable_type', $article->getMorphClass())
+                ->where('bookmarkable_id', $article->id)
+                ->exists()
+            : false;
+
+        $comments = ArticleComment::where('article_id', $article->id)
+            ->oldest()
+            ->get()
+            ->map(fn (ArticleComment $c) => [
+                'id' => $c->id,
+                'author_name' => $c->author_name,
+                'initial' => mb_substr($c->author_name, 0, 1),
+                'avatar_color' => $c->avatar_color,
+                'body' => $c->body,
+                'when' => $c->created_at->diffForHumans(),
+                'can_delete' => $user && ($user->id === $c->user_id || $user->is_admin),
+            ]);
 
         $related = Article::published()
             ->where('category', $article->category)
@@ -89,6 +112,8 @@ class BlogController extends Controller
 
         return Inertia::render('Blog/Show', [
             'article' => [
+                'id' => $article->id,
+                'slug' => $article->slug,
                 'title' => $article->title,
                 'category' => $article->category,
                 'emoji' => $article->emoji,
@@ -99,8 +124,11 @@ class BlogController extends Controller
                 'status' => $article->status,
                 'published' => $article->published_at?->translatedFormat('j F Y'),
                 'paragraphs' => $article->paragraphs(),
+                'bookmarked' => $bookmarked,
             ],
             'related' => $related,
+            'comments' => $comments,
+            'canComment' => (bool) $user,
         ]);
     }
 

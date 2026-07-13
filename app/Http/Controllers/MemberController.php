@@ -16,6 +16,7 @@ class MemberController extends Controller
     public function show(User $user): Response
     {
         $viewer = auth()->user();
+        $isFollowing = $viewer && $viewer->id !== $user->id ? $viewer->isFollowing($user) : false;
 
         $posts = Post::where('user_id', $user->id)
             ->with('group:id,name')
@@ -48,6 +49,7 @@ class MemberController extends Controller
                 'is_admin' => (bool) $user->is_admin,
                 'stats' => [
                     ['value' => $user->posts()->count(), 'label' => 'berichten'],
+                    ['value' => $user->followers()->count(), 'label' => 'volgers'],
                     ['value' => $user->followedGroups()->count(), 'label' => 'groepen'],
                     ['value' => $user->favouriteNames()->count(), 'label' => 'favorieten'],
                 ],
@@ -55,6 +57,7 @@ class MemberController extends Controller
             'posts' => $posts,
             'isSelf' => $viewer && $viewer->id === $user->id,
             'canMessage' => $viewer && $viewer->id !== $user->id,
+            'isFollowing' => $isFollowing,
         ]);
     }
 }

@@ -1,6 +1,7 @@
 <script setup>
 import MlmLayout from '@/Layouts/MlmLayout.vue';
 import ReportButton from '@/Components/ReportButton.vue';
+import FollowButton from '@/Components/FollowButton.vue';
 import { Head, Link } from '@inertiajs/vue3';
 
 defineProps({
@@ -8,6 +9,7 @@ defineProps({
     posts: { type: Array, default: () => [] },
     isSelf: { type: Boolean, default: false },
     canMessage: { type: Boolean, default: false },
+    isFollowing: { type: Boolean, default: false },
 });
 
 const badge = (text, color, bg) => ({ text, color, bg });
@@ -68,6 +70,7 @@ const badge = (text, color, bg) => ({ text, color, bg });
                             style="font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 14px; color: #c0566b; background: #fce7eb; border-radius: 999px; padding: 11px 22px; text-decoration: none"
                             >Log in om een bericht te sturen</Link
                         >
+                        <FollowButton :user-id="member.id" :following="isFollowing" />
                         <ReportButton v-if="!isSelf" type="user" :id="member.id" label="Profiel melden" />
                     </div>
                 </div>
