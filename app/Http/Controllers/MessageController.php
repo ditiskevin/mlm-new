@@ -77,7 +77,12 @@ class MessageController extends Controller
 
         // Push to the conversation channel in real time (ShouldBroadcastNow).
         // The sender already has the message locally and dedupes by id.
-        MessageSent::dispatch($message);
+        // Best-effort: never let a broadcasting hiccup fail sending the message.
+        try {
+            MessageSent::dispatch($message);
+        } catch (\Throwable $e) {
+            // realtime is optional; the message is already stored
+        }
 
         // Notify the other participant(s) about the new message.
         $conversation->participants()
@@ -106,8 +111,12 @@ class MessageController extends Controller
         $now = now();
         $conversation->participants()->updateExistingPivot($user->id, ['last_read_at' => $now]);
 
-        // Let the other participant's open thread show a "gelezen" receipt.
-        \App\Events\ConversationRead::dispatch($conversation->id, $user->id, $now->toIso8601String());
+        // Let the other participant's open thread show a "gelezen" receipt (best-effort).
+        try {
+            \App\Events\ConversationRead::dispatch($conversation->id, $user->id, $now->toIso8601String());
+        } catch (\Throwable $e) {
+            // realtime read-receipts are optional
+        }
     }
 
     /**
