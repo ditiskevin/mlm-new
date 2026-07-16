@@ -4,26 +4,24 @@ import Pusher from 'pusher-js';
 window.Pusher = Pusher;
 
 // --- Reverb connection config, resolved at runtime ---------------------------
-// The app key is rendered into a <meta> tag by the server, so realtime works in
-// production with only the runtime REVERB_* env — no Vite build-args required.
+// The server renders the exact websocket endpoint into <meta> tags (key/host/
+// port/scheme), so realtime works with only the runtime REVERB_* env — no Vite
+// build-args required, and no fragile URL guessing:
 //
-//   • Dev: the VITE_REVERB_* vars (localhost:8080) are baked at build time and
-//     take precedence.
-//   • Prod: with no VITE vars, we derive host/port/scheme from the current URL,
-//     since nginx proxies the Reverb websocket at /app on the same domain.
+//   • Dev:  meta → localhost:8080 (direct to the Reverb server).
+//   • Prod: meta → the public domain over wss:443 (nginx proxies /app to Reverb).
+//
+// Vite vars and URL-derivation remain only as fallbacks for older builds.
 const meta = (name) => document.querySelector(`meta[name="${name}"]`)?.content || undefined;
-
-const key = meta('reverb-key') || import.meta.env.VITE_REVERB_APP_KEY;
-const viteHost = import.meta.env.VITE_REVERB_HOST;
 const loc = window.location;
 
-const host = viteHost || loc.hostname;
-const scheme = viteHost ? (import.meta.env.VITE_REVERB_SCHEME ?? 'https') : loc.protocol.replace(':', '');
-const port = viteHost
-    ? Number(import.meta.env.VITE_REVERB_PORT ?? (scheme === 'https' ? 443 : 80))
-    : loc.protocol === 'https:'
-      ? 443
-      : 80;
+// The server renders the exact websocket endpoint in <meta> tags (reverb-host/
+// port/scheme), so this is correct in both dev and prod without build-time env.
+// Fall back to Vite vars, then to deriving from the current URL.
+const key = meta('reverb-key') || import.meta.env.VITE_REVERB_APP_KEY;
+const host = meta('reverb-host') || import.meta.env.VITE_REVERB_HOST || loc.hostname;
+const scheme = meta('reverb-scheme') || import.meta.env.VITE_REVERB_SCHEME || loc.protocol.replace(':', '');
+const port = Number(meta('reverb-port') || import.meta.env.VITE_REVERB_PORT || (scheme === 'https' ? 443 : 80));
 
 // Only wire up Echo when we actually have a key (avoids console errors when
 // broadcasting isn't configured, e.g. local setups without Reverb running).
